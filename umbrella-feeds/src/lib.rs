@@ -231,7 +231,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
     }
 
     // map of all prices stored in this contract, key for map is hash of feed name
-    // eg for "ETH-USD" feed, key will be hash("ETH-USD")
+    // eg for "ETH-USD" feed, key will be keccak256("ETH-USD")
     #[view]
     #[storage_mapper("prices")]
     fn prices(&self, key: &ManagedBuffer) -> SingleValueMapper<PriceData<Self::Api>>;
