@@ -7,7 +7,5 @@ pub trait StakingBank:
     staking_bank_module::StakingBankModule + staking_bank_module::events::StakingBankEventsModule
 {
     #[init]
-    fn init(&self) {
-        ManagedAddress::from()
-    }
+    fn init(&self) {}
 }

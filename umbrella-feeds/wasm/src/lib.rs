@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            0
+// Endpoints:                           12
 // Async Callback (empty):               1
-// Total number of exported functions:   2
+// Total number of exported functions:  14
 
 #![no_std]
 #![feature(lang_items)]
@@ -18,6 +18,18 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     umbrella_feeds
     (
+        update
+        reset
+        getManyPriceData
+        getPriceData
+        getPrice
+        getPriceTimestamp
+        getPriceTimestampHeartbeat
+        getPriceDataByName
+        prices
+        required_signatures
+        decimals
+        staking_bank
     )
 }
 
