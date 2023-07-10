@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "staking-bank",
+    "staking-bank/meta",
+    "umbrella-feeds",
+    "umbrella-feeds/meta",
+]
