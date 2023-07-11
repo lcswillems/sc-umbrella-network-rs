@@ -4,7 +4,7 @@ import createKeccakHash from "keccak";
 import { Address } from "@multiversx/sdk-core"
 import BigNumber from "bignumber.js";
 import { BigUIntValue, BinaryCodec } from "@multiversx/sdk-core"
-
+import EC from 'elliptic';
 
 // Contains signature generation code for update_valid_signature test
 
@@ -61,11 +61,19 @@ const newDataHash = createKeccakHash('keccak256').update(newData).digest();
 
 console.log('verify signature hash new data', newDataHash.toString());
 
-const signature = privateKey.sign(newDataHash);
+const secp256k1 = EC.ec('secp256k1');
+const key = secp256k1.keyFromPrivate(privateKey.valueOf());
+const signature = key.sign(newDataHash);
 
-console.log('signature hex', signature.toString('hex'));
+console.log('signature hex', Buffer.from(signature.toDER()).toString('hex'));
 
-const publicKey = privateKey.generatePublicKey();
-const verifySignature = publicKey.verify(newDataHash, signature);
+console.log('signature r', signature.r.toString('hex'));
+console.log('signature s', signature.s.toString('hex'));
+
+const publicKey = key.getPublic();
+
+console.log('public key', publicKey.encodeCompressed('hex'));
+
+const verifySignature = secp256k1.verify(newDataHash, signature, publicKey);
 
 console.log('verify signature', verifySignature);

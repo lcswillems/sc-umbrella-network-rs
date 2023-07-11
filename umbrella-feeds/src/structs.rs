@@ -1,8 +1,6 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use multiversx_sc::api::ED25519_SIGNATURE_BYTE_LEN;
-
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem, Debug)]
 pub struct PriceData<M: ManagedTypeApi> {
     pub data: u8, // TODO: This might not be needed since the contract is upgradable
@@ -13,6 +11,6 @@ pub struct PriceData<M: ManagedTypeApi> {
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem, Debug)]
 pub struct Signature<M: ManagedTypeApi> {
-    pub address: ManagedAddress<M>,
-    pub signature: ManagedByteArray<M, ED25519_SIGNATURE_BYTE_LEN>,
+    pub key: ManagedBuffer<M>,
+    pub signature: ManagedByteArray<M, 72>,
 }
