@@ -97,8 +97,8 @@ fn update_valid_signature() {
         });
 
         signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f")),
             address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
+            signature: ManagedByteArray::from(&hex!("89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f")),
         });
 
         sc.update(price_keys, price_datas, signatures);
