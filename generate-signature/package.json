@@ -10,8 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@multiversx/sdk-core": "^12.4.3",
-    "@multiversx/sdk-wallet": "^4.2.0",
-    "elliptic": "^6.5.4"
+    "@multiversx/sdk-wallet": "^4.2.0"
   },
   "type": "module",
   "module": "commonjs"

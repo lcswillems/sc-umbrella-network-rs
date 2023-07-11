@@ -12,7 +12,7 @@ pub trait StakingBank:
     fn init(&self) {
         if self.addresses().is_empty() {
             self.create(
-                ManagedAddress::from(hex!("f4c5ec79fd26fe080ffbb0d0ac0dcce901e54e58f0abb5bb883394916a2b261a")), // alice's wallet
+                ManagedAddress::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1")), // alice's wallet
                 ManagedBuffer::from(b"localhost")
             );
         }

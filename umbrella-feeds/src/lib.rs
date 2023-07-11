@@ -34,8 +34,6 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
         let price_data_hash = self.get_price_data_hash(&price_keys, &price_datas);
 
-        sc_print!("price data hash {}", price_data_hash.len());
-
         self.verify_signatures(&price_data_hash, &signatures);
 
         for index in 0..price_datas.len() {
@@ -174,21 +172,17 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
             "Not enough signatures"
         );
 
-        // let mut validators = MultiValueEncoded::<Self::Api, ManagedAddress>::new();
+        let mut validators = MultiValueEncoded::<Self::Api, ManagedAddress>::new();
 
         for index in 0..required_signatures {
-            sc_print!("index {}", index);
-
             let raw_signature: Signature<Self::Api> = signatures.get(index);
-
-            sc_print!("index 2 {}", index);
 
             self.verify_signature(&hash, &raw_signature);
 
-            // validators.push(raw_signature.key);
+            validators.push(raw_signature.address);
         }
 
-        // require!(self.verify_validators(validators), "Invalid signer");
+        require!(self.verify_validators(validators), "Invalid signer");
     }
 
     fn verify_signature(
@@ -198,21 +192,17 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
     ) {
         let mut data = ManagedBuffer::new();
 
+        // TODO: Is this prefix needed? And it can be moved to the initial_hash instead
         data.append(&ManagedBuffer::from(MULTIVERSX_PREFIX));
         data.append(&initial_hash.as_managed_buffer());
 
         let hash = self.crypto().keccak256(data);
 
-        let signature = self
-            .crypto()
-            .encode_secp256k1_der_signature(&raw_signature.r, &raw_signature.s);
-
         require!(
-            self.crypto().verify_custom_secp256k1(
-                &raw_signature.key,
+            self.crypto().verify_ed25519(
+                &raw_signature.address.as_managed_buffer(),
                 &hash.as_managed_buffer(),
-                &signature,
-                MessageHashType::ECDSAKeccak256
+                &raw_signature.signature.as_managed_buffer(),
             ),
             "Signatures out of order"
         );

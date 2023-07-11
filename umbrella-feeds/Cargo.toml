@@ -18,5 +18,8 @@ version = "=0.41.3"
 [dev-dependencies.multiversx-sc-scenario]
 version = "0.41.3"
 
+[dev-dependencies.staking-bank-static-local]
+path = "../staking-bank-static/staking-bank-static-local"
+
 [dev-dependencies]
 num-bigint = "0.4.2"

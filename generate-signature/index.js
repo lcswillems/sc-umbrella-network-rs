@@ -4,11 +4,11 @@ import createKeccakHash from "keccak";
 import { Address } from "@multiversx/sdk-core"
 import BigNumber from "bignumber.js";
 import { BigUIntValue, BinaryCodec } from "@multiversx/sdk-core"
-import EC from 'elliptic';
 
 
+// Contains signature generation code for update_valid_signature test
 
-const file = fs.readFileSync('./test-signer.pem').toString();
+const file = fs.readFileSync('./alice.pem').toString();
 const privateKey = UserSecretKey.fromPem(file);
 
 const priceKey = createKeccakHash('keccak256').update('ETH-USD').digest('hex');
@@ -40,18 +40,18 @@ let data = Buffer.concat([
   Buffer.from(priceData.data.toString()),
   Buffer.from(priceData.hearbeat.toString()),
   Buffer.from(priceData.timestamp.toString()),
-  codec.encodeNested(new BigUIntValue(priceData.price)),
+  codec.encodeTopLevel(new BigUIntValue(priceData.price)),
 ]);
 
 console.log('data to be signed', data);
 
 const dataHash = createKeccakHash('keccak256').update(data).digest();
 
-console.log('data hash to be signed', dataHash);
+console.log('data hash to be signed', dataHash.toString());
 
 // verify_signature
 const newData = Buffer.concat([
-  Buffer.from("\x19MultiversX Signed Message:\\n32"),
+  Buffer.from("\x19MultiversX Signed Message:\n32"),
   Buffer.from(dataHash)
 ]);
 
@@ -59,23 +59,13 @@ console.log('new data', newData);
 
 const newDataHash = createKeccakHash('keccak256').update(newData).digest();
 
-console.log('new data hash', newDataHash);
+console.log('verify signature hash new data', newDataHash.toString());
 
-// secp256k1 signature
-const secp256k1 = EC.ec('secp256k1');
+const signature = privateKey.sign(newDataHash);
 
-const key = secp256k1.keyFromPrivate(privateKey.valueOf());
+console.log('signature hex', signature.toString('hex'));
 
-const sigObj = key.sign(newDataHash);
-
-console.log('signature', sigObj);
-console.log('signature r', sigObj.r.toString('hex'));
-console.log('signature s', sigObj.s.toString('hex'));
-
-const newPublicKey = key.getPublic();
-
-console.log('new public key', newPublicKey.encodeCompressed('hex'));
-
-const verifySignature = secp256k1.verify(newDataHash, sigObj, newPublicKey);
+const publicKey = privateKey.generatePublicKey();
+const verifySignature = publicKey.verify(newDataHash, signature);
 
 console.log('verify signature', verifySignature);
