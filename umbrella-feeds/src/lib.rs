@@ -34,9 +34,11 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
         let price_data_hash = self.get_price_data_hash(&price_keys, &price_datas);
 
+        sc_print!("price data hash {}", price_data_hash.len());
+
         self.verify_signatures(&price_data_hash, &signatures);
 
-        for index in 1..=price_datas.len() {
+        for index in 0..price_datas.len() {
             let price_data: PriceData<Self::Api> = price_datas.get(index);
 
             let old_price_mapper = self.prices(price_keys.get(index).deref());
@@ -54,7 +56,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
         }
     }
 
-    // TODO: Is this needed here since the contract is upgradable unlike on Ethereum
+    // TODO: Is this needed here since the contract is upgradable unlike on Ethereum?
     #[endpoint]
     fn reset(
         &self,
@@ -172,17 +174,21 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
             "Not enough signatures"
         );
 
-        let mut validators = MultiValueEncoded::<Self::Api, ManagedAddress>::new();
+        // let mut validators = MultiValueEncoded::<Self::Api, ManagedAddress>::new();
 
-        for index in 1..=required_signatures {
+        for index in 0..required_signatures {
+            sc_print!("index {}", index);
+
             let raw_signature: Signature<Self::Api> = signatures.get(index);
+
+            sc_print!("index 2 {}", index);
 
             self.verify_signature(&hash, &raw_signature);
 
-            validators.push(raw_signature.key);
+            // validators.push(raw_signature.key);
         }
 
-        require!(self.verify_validators(validators), "Invalid signer");
+        // require!(self.verify_validators(validators), "Invalid signer");
     }
 
     fn verify_signature(
@@ -203,7 +209,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
         require!(
             self.crypto().verify_custom_secp256k1(
-                &raw_signature.key.as_managed_buffer(),
+                &raw_signature.key,
                 &hash.as_managed_buffer(),
                 &signature,
                 MessageHashType::ECDSAKeccak256

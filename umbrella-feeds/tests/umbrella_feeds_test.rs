@@ -1,11 +1,8 @@
 use multiversx_sc::types::{Address, ManagedBuffer, MultiValueManagedVec};
-use multiversx_sc_scenario::{
-    managed_address, rust_biguint,
-    testing_framework::{BlockchainStateWrapper, ContractObjWrapper},
-    DebugApi,
-};
+use multiversx_sc_scenario::{managed_address, rust_biguint, testing_framework::{BlockchainStateWrapper, ContractObjWrapper}, DebugApi, managed_buffer, managed_biguint};
 
 use umbrella_feeds::{ UmbrellaFeeds };
+use umbrella_feeds::structs::{PriceData, Signature};
 
 pub struct UmbrellaFeedsSetup<UmbrellaFeedsObjectBuilder>
     where
@@ -58,9 +55,28 @@ fn signature() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut vec = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut price_datas = MultiValueManagedVec::<DebugApi, PriceData<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
 
+        price_keys.push(managed_buffer!(b"2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7"));
 
+        price_datas.push(PriceData {
+            data: 0,
+            heartbeat: 0,
+            timestamp: 1688998114,
+            price: managed_biguint!(1000000000u64),
+        });
+
+        signatures.push(Signature {
+            v: 27,
+            r: managed_buffer!(b"db3b6308d733260e5d3a5f40066910e9a85ae7c2fdf2694fd0c48a5d575fa649"),
+            s: managed_buffer!(b"256d7641f97dbd648e1db679d6c9780028c07194a878f3c2c3773d24c42060af"),
+
+            key: managed_buffer!(b"02186c81b93f84eb8a8a31d39a9ce01f0cc5426fba0e11bf165ce62d237881d21e"),
+        });
+
+        sc.update(price_keys, price_datas, signatures);
     })
         .assert_ok();
 

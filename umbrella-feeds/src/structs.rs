@@ -15,5 +15,5 @@ pub struct Signature<M: ManagedTypeApi> {
     pub r: ManagedBuffer<M>,
     pub s: ManagedBuffer<M>,
 
-    pub key: ManagedAddress<M>,
+    pub key: ManagedBuffer<M>,
 }

@@ -4,17 +4,16 @@ import createKeccakHash from "keccak";
 import { Address } from "@multiversx/sdk-core"
 import BigNumber from "bignumber.js";
 import { BigUIntValue, BinaryCodec } from "@multiversx/sdk-core"
+import EC from 'elliptic';
+
+
 
 const file = fs.readFileSync('./test-signer.pem').toString();
 const privateKey = UserSecretKey.fromPem(file);
 
-const publicKey = privateKey.generatePublicKey();
-
-console.log('public key hex', publicKey.hex());
-
 const priceKey = createKeccakHash('keccak256').update('ETH-USD').digest('hex');
 
-console.log('ETH-USD hash hex', priceKey);
+console.log('ETH-USD price key hex', priceKey);
 
 const priceData = {
   data: 0,
@@ -30,55 +29,53 @@ console.log('contract address', contractAddress);
 
 const codec = new BinaryCodec();
 
+// get_price_data_hash
 let data = Buffer.concat([
   contractAddress,
 
+  // price_keys
   Buffer.from(priceKey, 'hex'),
 
+  // price_datas
   Buffer.from(priceData.data.toString()),
   Buffer.from(priceData.hearbeat.toString()),
   Buffer.from(priceData.timestamp.toString()),
   codec.encodeNested(new BigUIntValue(priceData.price)),
-]).toString('hex');
+]);
 
 console.log('data to be signed', data);
 
-const dataHash = createKeccakHash('keccak256').update(data).digest('hex');
+const dataHash = createKeccakHash('keccak256').update(data).digest();
 
 console.log('data hash to be signed', dataHash);
 
+// verify_signature
 const newData = Buffer.concat([
   Buffer.from("\x19MultiversX Signed Message:\\n32"),
   Buffer.from(dataHash)
-]).toString('hex');
+]);
 
 console.log('new data', newData);
 
-const newDataHash = createKeccakHash('keccak256').update(newData).digest('hex');
+const newDataHash = createKeccakHash('keccak256').update(newData).digest();
 
 console.log('new data hash', newDataHash);
 
-// TODO: Generate secp256k1 signature
+// secp256k1 signature
+const secp256k1 = EC.ec('secp256k1');
 
-//
-// const signature = privateKey.sign(
-//   Buffer.concat([
-//     Buffer.from('6d795f616464726573735F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F', 'hex'),
-//     Buffer.from('nft-create-uri13'),
-//   ])
-// );
-//
-// const signatureHex = signature.toString('hex');
-//
-// console.log('signature ', signatureHex);
-//
-// console.log(
-//   'verifying signature',
-//   publicKey.verify(
-//     Buffer.concat([
-//       Buffer.from('6d795f616464726573735F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F', 'hex'),
-//       Buffer.from('nft-create-uri13'),
-//     ]),
-//     Buffer.from(signatureHex, 'hex')
-//   )
-// );
+const key = secp256k1.keyFromPrivate(privateKey.valueOf());
+
+const sigObj = key.sign(newDataHash);
+
+console.log('signature', sigObj);
+console.log('signature r', sigObj.r.toString('hex'));
+console.log('signature s', sigObj.s.toString('hex'));
+
+const newPublicKey = key.getPublic();
+
+console.log('new public key', newPublicKey.encodeCompressed('hex'));
+
+const verifySignature = secp256k1.verify(newDataHash, sigObj, newPublicKey);
+
+console.log('verify signature', verifySignature);
