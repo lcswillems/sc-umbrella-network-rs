@@ -10,6 +10,8 @@
     "@types/node": "^18.16.18",
     "tsx": "^3.12.7",
     "typescript": "^5.0.4",
-    "xsuite": "0.0.25"
+    "xsuite": "0.0.25",
+    "@multiversx/sdk-core": "^12.4.3",
+    "@multiversx/sdk-wallet": "^4.2.0"
   }
 }

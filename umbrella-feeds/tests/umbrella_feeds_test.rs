@@ -1,4 +1,4 @@
-use multiversx_sc::types::{Address, ManagedBuffer, ManagedByteArray, MultiValueManagedVec};
+use multiversx_sc::types::{Address, ManagedBuffer, ManagedByteArray, MultiValueManagedVecCounted};
 use multiversx_sc_scenario::{managed_address, rust_biguint, testing_framework::{BlockchainStateWrapper, ContractObjWrapper}, DebugApi, managed_buffer, managed_biguint};
 use multiversx_sc::hex_literal::hex;
 
@@ -82,9 +82,9 @@ fn update_valid_signature() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut price_datas = MultiValueManagedVec::<DebugApi, PriceData<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut price_datas = MultiValueManagedVecCounted::<DebugApi, PriceData<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         // ETH-USD hashed using keccak256
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
@@ -116,9 +116,9 @@ fn update_valid_signature() {
 
     // Can not update with same data twice
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut price_datas = MultiValueManagedVec::<DebugApi, PriceData<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut price_datas = MultiValueManagedVecCounted::<DebugApi, PriceData<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         // ETH-USD hashed using keccak256
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
@@ -151,9 +151,9 @@ fn update_not_enough_signatures() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut price_datas = MultiValueManagedVec::<DebugApi, PriceData<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut price_datas = MultiValueManagedVecCounted::<DebugApi, PriceData<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
@@ -185,9 +185,9 @@ fn update_signatures_out_of_order() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut price_datas = MultiValueManagedVec::<DebugApi, PriceData<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut price_datas = MultiValueManagedVecCounted::<DebugApi, PriceData<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
@@ -219,9 +219,9 @@ fn update_invalid_signer() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut price_datas = MultiValueManagedVec::<DebugApi, PriceData<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut price_datas = MultiValueManagedVecCounted::<DebugApi, PriceData<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
@@ -253,8 +253,8 @@ fn reset_valid_signature() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         // ETH-USD hashed using keccak256
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
@@ -289,8 +289,8 @@ fn reset_not_enough_signatures() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         // ETH-USD hashed using keccak256
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
@@ -316,8 +316,8 @@ fn reset_signatures_out_of_order() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         // Wrong price keys hash
         price_keys.push(managed_buffer!(&hex!("1430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
@@ -343,8 +343,8 @@ fn reset_invalid_signer() {
     );
 
     fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVec::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVec::<DebugApi, Signature<DebugApi>>::new();
+        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
+        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
 
         // ETH-USD hashed using keccak256
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));

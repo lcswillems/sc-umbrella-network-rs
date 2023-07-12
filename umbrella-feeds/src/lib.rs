@@ -4,7 +4,6 @@ multiversx_sc::imports!();
 
 use crate::structs::{PriceData, Signature};
 use multiversx_sc::api::KECCAK256_RESULT_LEN;
-use core::ops::Deref;
 
 pub mod proxy;
 pub mod structs;
@@ -25,21 +24,24 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
     #[endpoint]
     fn update(
         &self,
-        price_keys: MultiValueManagedVec<ManagedBuffer>,
-        price_datas: MultiValueManagedVec<PriceData<Self::Api>>,
-        signatures: MultiValueManagedVec<Signature<Self::Api>>,
+        price_keys: MultiValueManagedVecCounted<ManagedBuffer>,
+        price_datas: MultiValueManagedVecCounted<PriceData<Self::Api>>,
+        signatures: MultiValueManagedVecCounted<Signature<Self::Api>>,
     ) {
         // below check is only for pretty errors, so we can safe gas and allow for raw revert
         // require!(price_keys.len() == price_datas.len(), "Arrays data do not match");
 
-        let price_data_hash = self.get_price_data_hash(&price_keys, &price_datas);
+        let price_keys_vec = price_keys.into_vec();
+        let price_datas_vec = price_datas.into_vec();
 
-        self.verify_signatures(&price_data_hash, &signatures);
+        let price_data_hash = self.get_price_data_hash(&price_keys_vec, &price_datas_vec);
 
-        for index in 0..price_datas.len() {
-            let price_data: PriceData<Self::Api> = price_datas.get(index);
+        self.verify_signatures(&price_data_hash, signatures);
 
-            let old_price_mapper = self.prices(price_keys.get(index).deref());
+        for index in 0..price_datas_vec.len() {
+            let price_data: PriceData<Self::Api> = price_datas_vec.get(index);
+
+            let old_price_mapper = self.prices(&price_keys_vec.get(index));
 
             if !old_price_mapper.is_empty() {
                 let old_price: PriceData<Self::Api> = old_price_mapper.get();
@@ -58,15 +60,17 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
     #[endpoint]
     fn reset(
         &self,
-        price_keys: MultiValueManagedVec<ManagedBuffer>,
-        signatures: MultiValueManagedVec<Signature<Self::Api>>,
+        price_keys: MultiValueManagedVecCounted<ManagedBuffer>,
+        signatures: MultiValueManagedVecCounted<Signature<Self::Api>>,
     ) {
-        let price_data_hash = self.get_reset_price_data_hash(&price_keys);
+        let price_keys_vec = price_keys.into_vec();
 
-        self.verify_signatures(&price_data_hash, &signatures);
+        let price_data_hash = self.get_reset_price_data_hash(&price_keys_vec);
 
-        for price_key in price_keys.iter() {
-            self.prices(price_key.deref()).set(&PriceData {
+        self.verify_signatures(&price_data_hash, signatures);
+
+        for price_key in price_keys_vec.iter() {
+            self.prices(&price_key).set(&PriceData {
                 data: DATA_RESET,
                 heartbeat: 0,
                 timestamp: 0,
@@ -120,8 +124,8 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
     fn get_price_data_hash(
         &self,
-        price_keys: &MultiValueManagedVec<ManagedBuffer>,
-        price_datas: &MultiValueManagedVec<PriceData<Self::Api>>,
+        price_keys: &ManagedVec<ManagedBuffer>,
+        price_datas: &ManagedVec<PriceData<Self::Api>>,
     ) -> ManagedByteArray<KECCAK256_RESULT_LEN> {
         let mut data = ManagedBuffer::new();
 
@@ -144,7 +148,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
     fn get_reset_price_data_hash(
         &self,
-        price_keys: &MultiValueManagedVec<ManagedBuffer>
+        price_keys: &ManagedVec<ManagedBuffer>
     ) -> ManagedByteArray<KECCAK256_RESULT_LEN> {
         let mut data = ManagedBuffer::new();
 
@@ -163,7 +167,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
     fn verify_signatures(
         &self,
         hash: &ManagedByteArray<KECCAK256_RESULT_LEN>,
-        signatures: &MultiValueManagedVec<Signature<Self::Api>>,
+        signatures: MultiValueManagedVecCounted<Signature<Self::Api>>,
     ) {
         let required_signatures = self.required_signatures().get();
 
@@ -174,8 +178,10 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
         let mut validators = MultiValueEncoded::<Self::Api, ManagedAddress>::new();
 
+        let signatures_vec = signatures.into_vec();
+
         for index in 0..required_signatures {
-            let raw_signature: Signature<Self::Api> = signatures.get(index);
+            let raw_signature: Signature<Self::Api> = signatures_vec.get(index);
 
             self.verify_signature(&hash, &raw_signature);
 

@@ -47,7 +47,7 @@ console.log('data to be signed', data);
 
 const dataHash = createKeccakHash('keccak256').update(data).digest();
 
-console.log('data hash to be signed', dataHash.toString());
+console.log('price_data_hash to be signed', dataHash.toString());
 
 // verify_signature
 const newData = Buffer.concat([
