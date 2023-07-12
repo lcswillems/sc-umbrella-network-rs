@@ -48,27 +48,28 @@ test("Test", async () => {
   assertAccount(pairs, {
     balance: 0n,
     hasPairs: [
-      // ...e.p.SingleValueMapper('decimals', [[e.U8(0), e.U8(8)]]),
-      // ...e.p.SingleValueMapper('staking_bank', [[e.U8(0), e.Addr(address)]]),
+      e.p.Mapper('staking_bank').Value(e.Addr(address)),
+      e.p.Mapper('required_signatures').Value(e.U32(1)),
+      e.p.Mapper('decimals').Value(e.U8(8)),
     ],
   });
 
   // const { tx } = await deployer.callContract({
   //   callee: contract,
   //   gasLimit: 10_000_000,
-  //   functionName: 'update',
-  //   functionArgs: [
-  //     e.List(e.Bytes(Buffer.from('2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7', 'hex'))).toNestHex(),
+  //   funcName: 'update',
+  //   funcArgs: [
+  //     e.List(e.Buffer(Buffer.from('2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7', 'hex'))),
   //     e.List(e.Tuple(
   //       e.U8(0),
   //       e.U32(0),
   //       e.U32(1688998114),
   //       e.U(1000000000),
-  //     )).toNestHex(),
+  //     )),
   //     e.List(e.Tuple(
   //       e.Addr('erd1qyu5wthldzr8wx5c9ucg8kjagg0jfs53s8nr3zpz3hypefsdd8ssycr6th'),
   //       e.Bytes(Buffer.from('89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f', 'hex')),
-  //     )).toNestHex(),
+  //     )),
   //   ],
   // });
 
