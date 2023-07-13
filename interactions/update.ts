@@ -6,8 +6,8 @@ import fs from 'fs';
 import { UserSecretKey } from '@multiversx/sdk-wallet/out';
 import createKeccakHash from "keccak";
 
-const contractStakingBankAddr: string = 'erd1qqqqqqqqqqqqqpgqta7gpchzrfqjywyqyqkcf246umtakkzfm40qszlvav';
-const contractAddr: string = 'erd1qqqqqqqqqqqqqpgqcecmln94j74nphaqc42f9yjuv2kn4mvcm40q889qyh';
+const contractStakingBankAddr: string = 'erd1qqqqqqqqqqqqqpgqlyj27pc930ltgjpvf9p6wyhdyruqw8hpm40qx899ps';
+const contractAddr: string = 'erd1qqqqqqqqqqqqqpgqrsd3cyq9frnmc39ykqcj8r66eysqphnzm40qay48e3';
 
 const generateSignature = (priceKeyRaw: string, priceData?: { data: number; price: BigNumber; hearbeat: number; timestamp: number }) => {
   const priceKey = createKeccakHash('keccak256').update(priceKeyRaw).digest('hex');

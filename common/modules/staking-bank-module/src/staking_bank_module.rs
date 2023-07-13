@@ -63,6 +63,10 @@ pub trait StakingBankModule: events::StakingBankEventsModule {
 
     #[view(verifyValidators)]
     fn verify_validators(&self, validators: MultiValueEncoded<ManagedAddress>) -> bool {
+        if validators.len() == 0 {
+            return false;
+        }
+
         for id in validators.into_iter() {
             if !self.is_validator(id) {
                 return false;

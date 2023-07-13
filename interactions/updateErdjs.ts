@@ -15,7 +15,7 @@ import { World } from 'xsuite/world';
 import { Signature } from '@multiversx/sdk-core/out/signature';
 
 const walletAddr: Address = Address.fromBech32('erd1y2jzfmez35yu34t20ewg7v3nv4xfm9kxwrcz24jaypfvrpwdm40q5tzd8c');
-const contractAddr: Address = Address.fromBech32('erd1qqqqqqqqqqqqqpgqcecmln94j74nphaqc42f9yjuv2kn4mvcm40q889qyh');
+const contractAddr: Address = Address.fromBech32('erd1qqqqqqqqqqqqqpgqrsd3cyq9frnmc39ykqcj8r66eysqphnzm40qay48e3');
 
 const generateSignature = (priceKeyRaw: string, priceData?: { data: number; price: BigNumber; hearbeat: number; timestamp: number }) => {
   const priceKey = createKeccakHash('keccak256').update(priceKeyRaw).digest('hex');
@@ -105,27 +105,17 @@ const main = async () => {
     new U32Value(1),
     VariadicValue.fromItems(Tuple.fromItems([
       new AddressValue(publicKey.toAddress()),
-      new BytesValue(signature)
+      new BytesValue(signature) // TODO: This adds the length as a prefix which isn't needed in the contract
     ]))
   ]);
-  //
-  // const transaction = updateInteraction
-  //   .withSender(account.address)
-  //   .withNonce(account.nonce)
-  //   .withValue(0)
-  //   .withGasLimit(20_000_000)
-  //   .withChainID('D')
-  //   .buildTransaction();
 
-  const transaction = new Transaction({
-    receiver: contract.getAddress(),
-    sender: account.address,
-    nonce: account.nonce,
-    value: 0,
-    gasLimit: 20_000_000,
-    chainID: 'D',
-    data: new TransactionPayload('update@000000012430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7@00000001000000000064ac10e2000000043b9aca00@000000010139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e100000040c7785a411c7e672be3053b3d83e3a59ec2a2ceb43feab8424c54f34ca667687bd864eba0ae676a03b9218c617885e92b1e713e98c874f9a9fc642f78e947a103'),
-  });
+  const transaction = updateInteraction
+    .withSender(account.address)
+    .withNonce(account.nonce)
+    .withValue(0)
+    .withGasLimit(20_000_000)
+    .withChainID('D')
+    .buildTransaction();
 
   const toSign = transaction.serializeForSigning();
   const txSignature = await wallet.sign(toSign);

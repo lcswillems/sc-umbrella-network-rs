@@ -81,7 +81,10 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
     // TODO: No fallback mechanism was implemented currently since the contract is upgradable
     #[view(getManyPriceData)]
-    fn get_many_price_data(&self, keys: MultiValueEncoded<ManagedBuffer>) -> MultiValueEncoded<PriceData<Self::Api>> {
+    fn get_many_price_data(
+        &self,
+        keys: MultiValueEncoded<ManagedBuffer>,
+    ) -> MultiValueEncoded<PriceData<Self::Api>> {
         let mut data = MultiValueEncoded::new();
 
         for key in keys.into_iter() {
@@ -148,7 +151,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
     fn get_reset_price_data_hash(
         &self,
-        price_keys: &ManagedVec<ManagedBuffer>
+        price_keys: &ManagedVec<ManagedBuffer>,
     ) -> ManagedByteArray<KECCAK256_RESULT_LEN> {
         let mut data = ManagedBuffer::new();
 
