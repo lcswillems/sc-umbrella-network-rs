@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, assert, beforeEach, expect, test } from "vitest";
 import { assertAccount } from "xsuite/test";
 import { FWorld, FWorldContract, FWorldWallet } from "xsuite/world";
 import { e } from "xsuite/data";
@@ -156,6 +156,24 @@ test("Deploy and update valid signature", async () => {
       )),
     ],
   });
+
+  const query = await fworld.query({
+    callee: contract,
+    funcName: 'getPriceDataByName',
+    funcArgs: [e.Str('ETH-USD')],
+  });
+
+  const data = query.returnData;
+
+  assert(
+    data,
+    e.Tuple(
+      e.U8(priceData.data),
+      e.U32(priceData.hearbeat),
+      e.U32(priceData.timestamp),
+      e.U(priceData.price.toNumber()),
+    ).toTopHex()
+  );
 });
 
 test("Update not enough signatures", async () => {

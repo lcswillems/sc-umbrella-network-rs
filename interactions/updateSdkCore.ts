@@ -1,11 +1,25 @@
 import BigNumber from 'bignumber.js';
 import {
   AbiRegistry,
-  Address, AddressValue,
+  Address,
+  AddressValue, BigUIntType,
   BigUIntValue,
-  BinaryCodec, BytesValue, ContractFunction, Interaction,
+  BinaryCodec,
+  BytesValue,
+  CompositeValue,
+  ContractFunction, FieldDefinition,
+  Interaction,
   ResultsParser,
-  SmartContract, StringValue, Transaction, TransactionPayload, Tuple, U32Value, U64Value, U8Value, VariadicValue
+  SmartContract,
+  StringValue,
+  StructType,
+  Transaction,
+  TransactionPayload,
+  Tuple, U32Type,
+  U32Value,
+  U64Value, U8Type,
+  U8Value,
+  VariadicValue
 } from '@multiversx/sdk-core/out';
 import fs from 'fs';
 import { UserSecretKey, UserWallet } from '@multiversx/sdk-wallet/out';
@@ -78,13 +92,30 @@ const main = async () => {
   const response = await proxy.queryContract(query);
   const parsedResponse = new ResultsParser().parseUntypedQueryResponse(response);
 
-  console.log('response', parsedResponse);
+  const codec = new BinaryCodec();
+  const structType = new StructType('PriceData', [
+    new FieldDefinition('data', '', new U8Type()),
+    new FieldDefinition('heartbeat', '', new U32Type()),
+    new FieldDefinition('timestamp', '', new U32Type()),
+    new FieldDefinition('price', '', new BigUIntType()),
+  ]);
+  const [decoded] = codec.decodeNested(parsedResponse.values[0], structType);
+  const decodedAttributes = decoded.valueOf();
+
+  const contractPriceData = {
+    data: decodedAttributes.data.toNumber(),
+    hearbeat: decodedAttributes.data.toNumber(),
+    timestamp: decodedAttributes.timestamp.toNumber(),
+    price: decodedAttributes.price.toNumber(),
+  }
+
+  console.log('price data for ETH-USD', contractPriceData);
 
   // Try and send update transaction
   const priceData = {
     data: 0,
     hearbeat: 0,
-    timestamp: 1688998114,
+    timestamp: 1688998115,
     price: new BigNumber(1000000000, 10),
   };
 
@@ -103,13 +134,12 @@ const main = async () => {
     ])),
 
     new U32Value(1),
-    VariadicValue.fromItems(Tuple.fromItems([
-      new AddressValue(publicKey.toAddress()),
-      new BytesValue(signature) // TODO: This adds the length as a prefix which isn't needed in the contract
-    ]))
+    VariadicValue.fromItems(
+      new BytesValue(Buffer.concat([publicKey.valueOf(), signature]))
+    )
   ]);
 
-  const transaction = updateInteraction
+  const transaction: Transaction = updateInteraction
     .withSender(account.address)
     .withNonce(account.nonce)
     .withValue(0)
@@ -122,9 +152,11 @@ const main = async () => {
 
   transaction.applySignature(Signature.fromBuffer(txSignature));
 
-  const hash = await proxy.sendTransaction(transaction);
+  console.log('data', transaction.getData().toString('hex'));
 
-  console.log('transaction hash', hash);
+  // const hash = await proxy.sendTransaction(transaction);
+
+  // console.log('transaction hash', hash);
 };
 
 main();
