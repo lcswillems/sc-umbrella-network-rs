@@ -1,5 +1,5 @@
 import { afterEach, assert, beforeEach, expect, test } from "vitest";
-import { assertAccount } from "xsuite/test";
+import { assertAccount } from "xsuite/assert";
 import { FWorld, FWorldContract, FWorldWallet } from "xsuite/world";
 import { e } from "xsuite/data";
 import { Address } from "@multiversx/sdk-core"

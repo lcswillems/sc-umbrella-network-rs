@@ -6,18 +6,23 @@
     "build:bank:static:local": "cd staking-bank-static/staking-bank-static-local && mxpy contract build",
     "build:bank": "cd staking-bank && mxpy contract build",
     "test": "vitest run",
-    "deploy": "tsx interactions/deploy.ts",
-    "interactions": "tsx interactions/${npm_config_name}.ts",
-    "typecheck": "tsc --noEmit"
+    "test:contract": "cd umbrella-feeds && cargo test",
+    "test:scenarios": "cd umbrella-feeds && mxpy contract test",
+    "test:all": "npm run build && npm run test:scenarios && npm run test && npm run test:contract",
+    "typecheck": "tsc --noEmit",
+    "interact:devnet": "CHAIN=devnet tsx interact/index.ts",
+    "interact:testnet": "CHAIN=testnet tsx interact/index.ts",
+    "interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
   },
   "devDependencies": {
     "@multiversx/sdk-core": "^12.5.0",
     "@multiversx/sdk-network-providers": "^1.5.0",
     "@multiversx/sdk-wallet": "^4.2.0",
     "@types/node": "^18.16.18",
+    "commander": "11.0.0",
     "tsx": "^3.12.7",
     "typescript": "^5.0.4",
     "vitest": "^0.33.0",
-    "xsuite": "0.0.25"
+    "xsuite": "0.0.27"
   }
 }

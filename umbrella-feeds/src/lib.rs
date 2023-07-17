@@ -167,6 +167,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
         self.crypto().keccak256(data)
     }
 
+    #[view]
     fn verify_signatures(
         &self,
         hash: &ManagedByteArray<KECCAK256_RESULT_LEN>,

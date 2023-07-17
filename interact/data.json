@@ -1,0 +1,19 @@
+{
+  "code": "file:umbrella-feeds/output/umbrella-feeds.wasm",
+  "stakingBankCode": {
+    "devnet": "file:staking-bank-static/staking-bank-static-local/output/staking-bank-static-local.wasm",
+    "testnet": "",
+    "mainnet": ""
+  },
+  "abi": "offers/output/offers.abi.json",
+  "address": {
+    "devnet": "erd1qqqqqqqqqqqqqpgqrsd3cyq9frnmc39ykqcj8r66eysqphnzm40qay48e3",
+    "testnet": "",
+    "mainnet": ""
+  },
+  "stakingBankAddress": {
+    "devnet": "erd1qqqqqqqqqqqqqpgqlyj27pc930ltgjpvf9p6wyhdyruqw8hpm40qx899ps",
+    "testnet": "",
+    "mainnet": ""
+  }
+}
