@@ -4,7 +4,7 @@ import fs from 'fs';
 import { UserSecretKey } from '@multiversx/sdk-wallet/out';
 import createKeccakHash from "keccak";
 
-export const generateSignature = (contractAddr: string, priceKeyRaw: string, priceData?: { data: number; price: BigNumber; hearbeat: number; timestamp: number }) => {
+export const generateSignature = (contractAddr: string, priceKeyRaw: string, priceData: { price: BigNumber; hearbeat: number; timestamp: number }) => {
   console.log('contract addr', contractAddr);
 
   const priceKey = createKeccakHash('keccak256').update(priceKeyRaw).digest('hex');
@@ -19,13 +19,10 @@ export const generateSignature = (contractAddr: string, priceKeyRaw: string, pri
     // price_keys
     Buffer.from(priceKey, 'hex'),
 
-    ...(priceData ? [
-      // price_datas
-      Buffer.from(priceData.data.toString()),
-      Buffer.from(priceData.hearbeat.toString()),
-      Buffer.from(priceData.timestamp.toString()),
-      codec.encodeTopLevel(new BigUIntValue(priceData.price)),
-    ] : [Buffer.from('RESET')]),
+    // price_datas
+    Buffer.from(priceData.hearbeat.toString()),
+    Buffer.from(priceData.timestamp.toString()),
+    codec.encodeTopLevel(new BigUIntValue(priceData.price)),
   ]);
 
   const dataHash = createKeccakHash('keccak256').update(data).digest();

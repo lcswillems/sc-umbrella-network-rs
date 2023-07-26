@@ -9,8 +9,6 @@ pub mod proxy;
 pub mod structs;
 
 const MULTIVERSX_PREFIX: &[u8; 30] = b"\x19MultiversX Signed Message:\n32";
-const RESET: &[u8; 5] = b"RESET";
-const DATA_RESET: u8 = u8::MAX;
 
 #[multiversx_sc::contract]
 pub trait UmbrellaFeeds: proxy::ProxyModule {
@@ -49,33 +47,9 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
                 // we do not allow for older prices
                 // at the same time it prevents from reusing signatures
                 require!(price_data.timestamp > old_price.timestamp, "Old data");
-                require!(old_price.data != DATA_RESET, "Data reset");
             }
 
             old_price_mapper.set(price_data);
-        }
-    }
-
-    // TODO: Is this needed here since the contract is upgradable unlike on Ethereum?
-    #[endpoint]
-    fn reset(
-        &self,
-        price_keys: MultiValueManagedVecCounted<ManagedBuffer>,
-        signatures: MultiValueManagedVecCounted<Signature<Self::Api>>,
-    ) {
-        let price_keys_vec = price_keys.into_vec();
-
-        let price_data_hash = self.get_reset_price_data_hash(&price_keys_vec);
-
-        self.verify_signatures(&price_data_hash, signatures);
-
-        for price_key in price_keys_vec.iter() {
-            self.prices(&price_key).set(&PriceData {
-                data: DATA_RESET,
-                heartbeat: 0,
-                timestamp: 0,
-                price: BigUint::zero(),
-            })
         }
     }
 
@@ -140,29 +114,10 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
         }
 
         for price_data in price_datas.iter() {
-            data.append(&self.decimal_to_ascii(price_data.data as u64));
             data.append(&self.decimal_to_ascii(price_data.heartbeat as u64));
             data.append(&self.decimal_to_ascii(price_data.timestamp as u64));
             data.append(&price_data.price.to_bytes_be_buffer());
         }
-
-        self.crypto().keccak256(data)
-    }
-
-    fn get_reset_price_data_hash(
-        &self,
-        price_keys: &ManagedVec<ManagedBuffer>,
-    ) -> ManagedByteArray<KECCAK256_RESULT_LEN> {
-        let mut data = ManagedBuffer::new();
-
-        // data.append(get_chain_id()); // TODO: Can chainId be retrieved from the contract?
-        data.append(&self.blockchain().get_sc_address().as_managed_buffer());
-
-        for price_key in price_keys.iter() {
-            data.append(&price_key);
-        }
-
-        data.append(&ManagedBuffer::from(RESET));
 
         self.crypto().keccak256(data)
     }
@@ -207,6 +162,8 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
         data.append(&initial_hash.as_managed_buffer());
 
         let hash = self.crypto().keccak256(data);
+
+        sc_print!("hash {}", hash.as_managed_buffer());
 
         require!(
             self.crypto().verify_ed25519(

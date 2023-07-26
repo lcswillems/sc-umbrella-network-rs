@@ -61,7 +61,7 @@ const deployContract = async (addressStakingBank: string, requiredSignatures: nu
   });
 }
 
-const generateSignature = (priceKeyRaw: string, priceData?: { data: number; price: BigNumber; hearbeat: number; timestamp: number }) => {
+const generateSignature = (priceKeyRaw: string, priceData: { price: BigNumber; hearbeat: number; timestamp: number }) => {
   const priceKey = createKeccakHash('keccak256').update(priceKeyRaw).digest('hex');
   const contractAddress = Address.fromBech32(address).pubkey();
 
@@ -74,13 +74,10 @@ const generateSignature = (priceKeyRaw: string, priceData?: { data: number; pric
     // price_keys
     Buffer.from(priceKey, 'hex'),
 
-    ...(priceData ? [
-      // price_datas
-      Buffer.from(priceData.data.toString()),
-      Buffer.from(priceData.hearbeat.toString()),
-      Buffer.from(priceData.timestamp.toString()),
-      codec.encodeTopLevel(new BigUIntValue(priceData.price)),
-    ] : [Buffer.from('RESET')]),
+    // price_datas
+    Buffer.from(priceData.hearbeat.toString()),
+    Buffer.from(priceData.timestamp.toString()),
+    codec.encodeTopLevel(new BigUIntValue(priceData.price)),
   ]);
 
   const dataHash = createKeccakHash('keccak256').update(data).digest();
@@ -108,7 +105,6 @@ test("Deploy and update valid signature", async () => {
   await deployContract(addressStakingBank);
 
   const priceData = {
-    data: 0,
     hearbeat: 0,
     timestamp: 1688998114,
     price: new BigNumber(1000000000, 10),
@@ -126,7 +122,6 @@ test("Deploy and update valid signature", async () => {
 
       e.U32(1),
       e.List(e.Tuple(
-        e.U8(priceData.data),
         e.U32(priceData.hearbeat),
         e.U32(priceData.timestamp),
         e.U(priceData.price.toNumber()),
@@ -149,7 +144,6 @@ test("Deploy and update valid signature", async () => {
       e.p.Mapper('decimals').Value(e.U8(8)),
 
       e.p.Mapper('prices', e.Buffer(Buffer.from(priceKey, 'hex'))).Value(e.Tuple(
-        e.U8(priceData.data),
         e.U32(priceData.hearbeat),
         e.U32(priceData.timestamp),
         e.U(priceData.price.toNumber()),
@@ -168,7 +162,6 @@ test("Deploy and update valid signature", async () => {
   assert(
     data,
     e.Tuple(
-      e.U8(priceData.data),
       e.U32(priceData.hearbeat),
       e.U32(priceData.timestamp),
       e.U(priceData.price.toNumber()),
@@ -182,7 +175,6 @@ test("Update not enough signatures", async () => {
   await deployContract(addressStakingBank, 2);
 
   const priceData = {
-    data: 0,
     hearbeat: 0,
     timestamp: 1688998114,
     price: new BigNumber(1000000000, 10),
@@ -201,7 +193,6 @@ test("Update not enough signatures", async () => {
 
         e.U32(1),
         e.List(e.Tuple(
-          e.U8(priceData.data),
           e.U32(priceData.hearbeat),
           e.U32(priceData.timestamp),
           e.U(priceData.price.toNumber()),
@@ -223,7 +214,6 @@ test("Update signatures out of order", async () => {
   await deployContract(addressStakingBank);
 
   const priceData = {
-    data: 0,
     hearbeat: 0,
     timestamp: 1688998114,
     price: new BigNumber(1000000000, 10),
@@ -242,7 +232,6 @@ test("Update signatures out of order", async () => {
 
         e.U32(1),
         e.List(e.Tuple(
-          e.U8(priceData.data),
           e.U32(priceData.hearbeat),
           e.U32(priceData.timestamp),
           e.U(1), // wrong price
@@ -265,7 +254,6 @@ test("Update invalid signer", async () => {
   await deployContract(addressStakingBank);
 
   const priceData = {
-    data: 0,
     hearbeat: 0,
     timestamp: 1688998114,
     price: new BigNumber(1000000000, 10),
@@ -284,7 +272,6 @@ test("Update invalid signer", async () => {
 
         e.U32(1),
         e.List(e.Tuple(
-          e.U8(priceData.data),
           e.U32(priceData.hearbeat),
           e.U32(priceData.timestamp),
           e.U(priceData.price.toNumber()),
@@ -298,45 +285,4 @@ test("Update invalid signer", async () => {
       ],
     })
   ).rejects.toThrowError('Tx failed: 4 - Invalid signer');
-});
-
-test("Deploy and reset valid signature", async () => {
-  await deployStakingBank();
-
-  await deployContract(addressStakingBank);
-
-  const { priceKey, publicKey, signature } = generateSignature('ETH-USD');
-
-  await deployer.callContract({
-    callee: contract,
-    gasLimit: 10_000_000,
-    funcName: 'reset',
-    funcArgs: [
-      e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
-      e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
-
-      e.U32(1),
-      e.List(e.Tuple(
-        e.Addr(publicKey.toAddress().bech32()),
-        e.Bytes(signature),
-      )),
-    ],
-  });
-
-  const pairs = await contract.getAccountWithPairs();
-  assertAccount(pairs, {
-    balance: 0n,
-    hasPairs: [
-      e.p.Mapper('staking_bank').Value(e.Addr(addressStakingBank)),
-      e.p.Mapper('required_signatures').Value(e.U32(1)),
-      e.p.Mapper('decimals').Value(e.U8(8)),
-
-      e.p.Mapper('prices', e.Buffer(Buffer.from(priceKey, 'hex'))).Value(e.Tuple(
-        e.U8(255),
-        e.U32(0),
-        e.U32(0),
-        e.U(0),
-      )),
-    ],
-  });
 });

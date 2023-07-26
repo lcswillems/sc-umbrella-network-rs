@@ -7,12 +7,12 @@
   },
   "abi": "offers/output/offers.abi.json",
   "address": {
-    "devnet": "erd1qqqqqqqqqqqqqpgqrsd3cyq9frnmc39ykqcj8r66eysqphnzm40qay48e3",
+    "devnet": "erd1qqqqqqqqqqqqqpgqu9c8sy0cxcs4vgnk7ngq5tx627sv4vhfm40q9pa6td",
     "testnet": "",
     "mainnet": ""
   },
   "stakingBankAddress": {
-    "devnet": "erd1qqqqqqqqqqqqqpgqlyj27pc930ltgjpvf9p6wyhdyruqw8hpm40qx899ps",
+    "devnet": "erd1qqqqqqqqqqqqqpgqxn9cchlgcp4mhf49s08aqxl8fx3glhjnm40qu4c9ux",
     "testnet": "",
     "mainnet": ""
   }

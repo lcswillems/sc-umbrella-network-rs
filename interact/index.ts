@@ -49,7 +49,7 @@ program.command("deploy").action(async () => {
 
   const result = await wallet.deployContract({
     code: data.code,
-    codeMetadata: [],
+    codeMetadata: ["upgradeable"],
     gasLimit: 100_000_000,
     codeArgs: [
       e.Addr(resultStakingBank.address),
@@ -87,15 +87,13 @@ program.command("ClaimDeveloperRewards").action(async () => {
 });
 
 program.command("update")
-  .argument('[data]', 'data', 0)
   .argument('[hearbeat]', 'data', 0)
   .argument('[timestamp]', 'data', 1688998114)
   .argument('[price]', 'data', 1000000000)
-  .action(async (priceDataData: number, hearbeat: number, timestamp: number, price: number) => {
+  .action(async (hearbeat: number, timestamp: number, price: number) => {
   const wallet = await loadWallet();
 
   const priceData = {
-    data: priceDataData,
     hearbeat,
     timestamp,
     price: new BigNumber(price, 10),
@@ -113,7 +111,6 @@ program.command("update")
 
       e.U32(1),
       e.List(e.Tuple(
-        e.U8(BigInt(priceData.data)),
         e.U32(BigInt(priceData.hearbeat)),
         e.U32(BigInt(priceData.timestamp)),
         e.U(BigInt(priceData.price.toNumber())),
@@ -146,7 +143,6 @@ program.command("getPriceDataByName")
 
     const codec = new BinaryCodec();
     const structType = new StructType('PriceData', [
-      new FieldDefinition('data', '', new U8Type()),
       new FieldDefinition('heartbeat', '', new U32Type()),
       new FieldDefinition('timestamp', '', new U32Type()),
       new FieldDefinition('price', '', new BigUIntType()),
@@ -155,8 +151,7 @@ program.command("getPriceDataByName")
     const decodedAttributes = decoded.valueOf();
 
     const contractPriceData = {
-      data: decodedAttributes.data.toNumber(),
-      hearbeat: decodedAttributes.data.toNumber(),
+      hearbeat: decodedAttributes.hearbeat.toNumber(),
       timestamp: decodedAttributes.timestamp.toNumber(),
       price: decodedAttributes.price.toNumber(),
     }
@@ -180,7 +175,6 @@ program.command("updateSdkCore").action(async () => {
 
   const codec = new BinaryCodec();
   const structType = new StructType('PriceData', [
-    new FieldDefinition('data', '', new U8Type()),
     new FieldDefinition('heartbeat', '', new U32Type()),
     new FieldDefinition('timestamp', '', new U32Type()),
     new FieldDefinition('price', '', new BigUIntType()),
@@ -189,8 +183,7 @@ program.command("updateSdkCore").action(async () => {
   const decodedAttributes = decoded.valueOf();
 
   const contractPriceData = {
-    data: decodedAttributes.data.toNumber(),
-    hearbeat: decodedAttributes.data.toNumber(),
+    hearbeat: decodedAttributes.hearbeat.toNumber(),
     timestamp: decodedAttributes.timestamp.toNumber(),
     price: decodedAttributes.price.toNumber(),
   }
@@ -199,7 +192,6 @@ program.command("updateSdkCore").action(async () => {
 
   // Try and send update transaction
   const priceData = {
-    data: 0,
     hearbeat: 0,
     timestamp: 1688998115,
     price: new BigNumber(1000000000, 10),
@@ -213,7 +205,6 @@ program.command("updateSdkCore").action(async () => {
 
     new U32Value(1),
     VariadicValue.fromItems(Tuple.fromItems([
-      new U8Value(priceData.data),
       new U32Value(priceData.hearbeat),
       new U32Value(priceData.timestamp),
       new BigUIntValue(priceData.price),

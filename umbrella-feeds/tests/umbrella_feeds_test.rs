@@ -90,7 +90,6 @@ fn update_valid_signature() {
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
         price_datas.push(PriceData {
-            data: 0,
             heartbeat: 0,
             timestamp: 1688998114,
             price: managed_biguint!(1000000000u64),
@@ -98,7 +97,7 @@ fn update_valid_signature() {
 
         signatures.push(Signature {
             address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
-            signature: ManagedByteArray::from(&hex!("89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f")),
+            signature: ManagedByteArray::from(&hex!("611cf1e57a59c15317c177963bf555e368d61506032b69ca4d42094bed662a77aafc7cacdffe404be16444e5e8ccc0082b60ec0f98ac217b75e83a3ff5ea1d09")),
         });
 
         sc.update(price_keys, price_datas, signatures);
@@ -108,7 +107,6 @@ fn update_valid_signature() {
     fc_setup.b_mock.execute_query(&fc_setup.contract_wrapper, |sc| {
         let price_data: PriceData<DebugApi> = sc.get_price_data_by_name(managed_buffer!(b"ETH-USD"));
 
-        assert_eq!(price_data.data, 0);
         assert_eq!(price_data.heartbeat, 0);
         assert_eq!(price_data.timestamp, 1688998114);
         assert_eq!(price_data.price, managed_biguint!(1000000000u64));
@@ -124,15 +122,14 @@ fn update_valid_signature() {
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
         price_datas.push(PriceData {
-            data: 0,
             heartbeat: 0,
             timestamp: 1688998114,
             price: managed_biguint!(1000000000u64),
         });
 
         signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f")),
             address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
+            signature: ManagedByteArray::from(&hex!("611cf1e57a59c15317c177963bf555e368d61506032b69ca4d42094bed662a77aafc7cacdffe404be16444e5e8ccc0082b60ec0f98ac217b75e83a3ff5ea1d09")),
         });
 
         sc.update(price_keys, price_datas, signatures);
@@ -158,7 +155,6 @@ fn update_not_enough_signatures() {
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
         price_datas.push(PriceData {
-            data: 0,
             heartbeat: 0,
             timestamp: 1688998114,
             price: managed_biguint!(1000000000u64),
@@ -166,7 +162,7 @@ fn update_not_enough_signatures() {
 
         signatures.push(Signature {
             address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
-            signature: ManagedByteArray::from(&hex!("89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f")),
+            signature: ManagedByteArray::from(&hex!("611cf1e57a59c15317c177963bf555e368d61506032b69ca4d42094bed662a77aafc7cacdffe404be16444e5e8ccc0082b60ec0f98ac217b75e83a3ff5ea1d09")),
         });
 
         sc.update(price_keys, price_datas, signatures);
@@ -192,15 +188,14 @@ fn update_signatures_out_of_order() {
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
         price_datas.push(PriceData {
-            data: 0,
             heartbeat: 0,
             timestamp: 1688998114,
             price: managed_biguint!(2000000000u64), // wrong price
         });
 
         signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f")),
             address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
+            signature: ManagedByteArray::from(&hex!("611cf1e57a59c15317c177963bf555e368d61506032b69ca4d42094bed662a77aafc7cacdffe404be16444e5e8ccc0082b60ec0f98ac217b75e83a3ff5ea1d09")),
         });
 
         sc.update(price_keys, price_datas, signatures);
@@ -226,135 +221,17 @@ fn update_invalid_signer() {
         price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
 
         price_datas.push(PriceData {
-            data: 0,
             heartbeat: 0,
             timestamp: 1688998114,
             price: managed_biguint!(1000000000u64),
         });
 
         signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f")),
             address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
+            signature: ManagedByteArray::from(&hex!("611cf1e57a59c15317c177963bf555e368d61506032b69ca4d42094bed662a77aafc7cacdffe404be16444e5e8ccc0082b60ec0f98ac217b75e83a3ff5ea1d09")),
         });
 
         sc.update(price_keys, price_datas, signatures);
-    })
-        .assert_user_error("Invalid signer");
-}
-
-#[test]
-fn reset_valid_signature() {
-    let rust_zero = rust_biguint!(0u64);
-    let mut fc_setup = UmbrellaFeedsSetup::new(
-        umbrella_feeds::contract_obj,
-        staking_bank_static_local::contract_obj,
-        1,
-        true,
-    );
-
-    fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
-
-        // ETH-USD hashed using keccak256
-        price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
-
-        signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("38c922a8ba1ea703f15b5bb4ac967292f663cdaaea18e8b5a1402ef9b546a96e621fd3c2755a85553642b3ed40de9e7a72d9a768f4bab29ab31320b9e25b8b0b")),
-            address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
-        });
-
-        sc.reset(price_keys, signatures);
-    })
-        .assert_ok();
-
-    fc_setup.b_mock.execute_query(&fc_setup.contract_wrapper, |sc| {
-        let price_data: PriceData<DebugApi> = sc.get_price_data_by_name(managed_buffer!(b"ETH-USD"));
-
-        assert_eq!(price_data.data, 255);
-        assert_eq!(price_data.heartbeat, 0);
-        assert_eq!(price_data.timestamp, 0);
-        assert_eq!(price_data.price, managed_biguint!(0));
-    }).assert_ok();
-}
-
-#[test]
-fn reset_not_enough_signatures() {
-    let rust_zero = rust_biguint!(0u64);
-    let mut fc_setup = UmbrellaFeedsSetup::new(
-        umbrella_feeds::contract_obj,
-        staking_bank_static_local::contract_obj,
-        2, // require at least 2 signatures
-        true,
-    );
-
-    fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
-
-        // ETH-USD hashed using keccak256
-        price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
-
-        signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("38c922a8ba1ea703f15b5bb4ac967292f663cdaaea18e8b5a1402ef9b546a96e621fd3c2755a85553642b3ed40de9e7a72d9a768f4bab29ab31320b9e25b8b0b")),
-            address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
-        });
-
-        sc.reset(price_keys, signatures);
-    })
-        .assert_user_error("Not enough signatures");
-}
-
-#[test]
-fn reset_signatures_out_of_order() {
-    let rust_zero = rust_biguint!(0u64);
-    let mut fc_setup = UmbrellaFeedsSetup::new(
-        umbrella_feeds::contract_obj,
-        staking_bank_static_local::contract_obj,
-        1,
-        true,
-    );
-
-    fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
-
-        // Wrong price keys hash
-        price_keys.push(managed_buffer!(&hex!("1430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
-
-        signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("38c922a8ba1ea703f15b5bb4ac967292f663cdaaea18e8b5a1402ef9b546a96e621fd3c2755a85553642b3ed40de9e7a72d9a768f4bab29ab31320b9e25b8b0b")),
-            address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
-        });
-
-        sc.reset(price_keys, signatures);
-    })
-        .assert_user_error("Signatures out of order");
-}
-
-#[test]
-fn reset_invalid_signer() {
-    let rust_zero = rust_biguint!(0u64);
-    let mut fc_setup = UmbrellaFeedsSetup::new(
-        umbrella_feeds::contract_obj,
-        staking_bank_static_local::contract_obj,
-        1,
-        false,
-    );
-
-    fc_setup.b_mock.execute_tx(&fc_setup.owner_address, &fc_setup.contract_wrapper, &rust_zero, |sc| {
-        let mut price_keys = MultiValueManagedVecCounted::<DebugApi, ManagedBuffer<DebugApi>>::new();
-        let mut signatures = MultiValueManagedVecCounted::<DebugApi, Signature<DebugApi>>::new();
-
-        // ETH-USD hashed using keccak256
-        price_keys.push(managed_buffer!(&hex!("2430f68ea2e8d4151992bb7fc3a4c472087a6149bf7e0232704396162ab7c1f7")));
-
-        signatures.push(Signature {
-            signature: ManagedByteArray::from(&hex!("38c922a8ba1ea703f15b5bb4ac967292f663cdaaea18e8b5a1402ef9b546a96e621fd3c2755a85553642b3ed40de9e7a72d9a768f4bab29ab31320b9e25b8b0b")),
-            address: managed_address!(&Address::from(hex!("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1"))),
-        });
-
-        sc.reset(price_keys, signatures);
     })
         .assert_user_error("Invalid signer");
 }

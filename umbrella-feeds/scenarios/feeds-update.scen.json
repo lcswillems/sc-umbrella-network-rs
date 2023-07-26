@@ -19,14 +19,13 @@
 
           "u32:1",
           {
-            "1-data": "u8:0",
-            "2-hearbeat": "u32:0",
-            "3-timestamp": "u32:1688998114",
-            "4-price": "nested:biguint:1000000000"
+            "1-hearbeat": "u32:0",
+            "2-timestamp": "u32:1688998114",
+            "3-price": "nested:biguint:1000000000"
           },
 
           "u32:1",
-          "0x0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1|0x89657df3e35a4f34c758ea228c1cb6fc4789c109b04d0cbd7d562483de8a640a4a18a07f6f772ce53ab868d4fa0509c7ff2934b08fd93dd35f4784963453610f"
+          "0x0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1|0x611cf1e57a59c15317c177963bf555e368d61506032b69ca4d42094bed662a77aafc7cacdffe404be16444e5e8ccc0082b60ec0f98ac217b75e83a3ff5ea1d09"
         ],
         "gasLimit": "15,000,000",
         "gasPrice": "0"
