@@ -22,8 +22,6 @@ import {
   Tuple,
   U32Type,
   U32Value,
-  U8Type,
-  U8Value,
   VariadicValue
 } from '@multiversx/sdk-core/out';
 import { Signature } from '@multiversx/sdk-core/out/signature';
@@ -40,12 +38,17 @@ const program = new Command();
 
 program.command("deploy").action(async () => {
   const wallet = await loadWallet();
+
+  console.log('Deploying Staking Bank contract...');
+
   const resultStakingBank = await wallet.deployContract({
     code: envChain.select(data.stakingBankCode),
-    codeMetadata: [],
+    codeMetadata: ["upgradeable"],
     gasLimit: 100_000_000,
   });
-  console.log(resultStakingBank);
+  console.log('Staking Bank Result', resultStakingBank);
+
+  console.log('Deploying Umbrella Feeds contract...');
 
   const result = await wallet.deployContract({
     code: data.code,
@@ -57,11 +60,27 @@ program.command("deploy").action(async () => {
       e.U8(8) // prices decimals
     ]
   });
-  console.log("Result:", result);
+  console.log("Umbrella Feeds Result:", result);
+
+  console.log('Staking Bank Address:', resultStakingBank.address);
+  console.log('Umbrella Feeds Address:', result.address);
 });
 
 program.command("upgrade").action(async () => {
   const wallet = await loadWallet();
+
+  console.log('Upgrading Staking Bank contract...');
+
+  const resultStakingBank = await wallet.upgradeContract({
+    callee: envChain.select(data.stakingBankAddress),
+    code: envChain.select(data.stakingBankCode),
+    codeMetadata: ["upgradeable"],
+    gasLimit: 100_000_000,
+  });
+  console.log('Staking Bank Result', resultStakingBank);
+
+  console.log('Upgrading Umbrella Feeds contract...');
+
   const result = await wallet.upgradeContract({
     callee: envChain.select(data.address),
     code: data.code,
@@ -73,7 +92,10 @@ program.command("upgrade").action(async () => {
       e.U8(8)
     ],
   });
-  console.log("Result:", result);
+  console.log("Umbrella Feeds Result:", result);
+
+  console.log('Staking Bank Address:', resultStakingBank.address);
+  console.log('Umbrella Feeds Address:', result.address);
 });
 
 program.command("ClaimDeveloperRewards").action(async () => {
@@ -91,42 +113,41 @@ program.command("update")
   .argument('[timestamp]', 'data', 1688998114)
   .argument('[price]', 'data', 1000000000)
   .action(async (hearbeat: number, timestamp: number, price: number) => {
-  const wallet = await loadWallet();
+    const wallet = await loadWallet();
 
-  const priceData = {
-    hearbeat,
-    timestamp,
-    price: new BigNumber(price, 10),
-  };
+    const priceData = {
+      hearbeat,
+      timestamp,
+      price: new BigNumber(price, 10),
+    };
 
-  const { priceKey, publicKey, signature } = generateSignature(envChain.select(data.address), 'ETH-USD', priceData);
+    const { priceKey, publicKey, signature } = generateSignature(envChain.select(data.address), 'ETH-USD', priceData);
 
-  const tx = await wallet.callContract({
-    callee: envChain.select(data.address),
-    gasLimit: 10_000_000,
-    funcName: 'update',
-    funcArgs: [
-      e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
-      e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
+    const tx = await wallet.callContract({
+      callee: envChain.select(data.address),
+      gasLimit: 10_000_000,
+      funcName: 'update',
+      funcArgs: [
+        e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
+        e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
 
-      e.U32(1),
-      e.List(e.Tuple(
-        e.U32(BigInt(priceData.hearbeat)),
-        e.U32(BigInt(priceData.timestamp)),
-        e.U(BigInt(priceData.price.toNumber())),
-      )),
+        e.U32(1),
+        e.List(e.Tuple(
+          e.U32(BigInt(priceData.hearbeat)),
+          e.U32(BigInt(priceData.timestamp)),
+          e.U(BigInt(priceData.price.toNumber())),
+        )),
 
-      e.U32(1),
-      e.List(e.Tuple(
-        e.Addr(publicKey.toAddress().bech32()),
-        e.Bytes(signature),
-      )),
-    ],
+        e.U32(1),
+        e.List(e.Tuple(
+          e.Addr(publicKey.toAddress().bech32()),
+          e.Bytes(signature),
+        )),
+      ],
+    });
+
+    console.log('transaction', tx);
   });
-
-  console.log('transaction', tx);
-});
-
 
 
 program.command("getPriceDataByName")

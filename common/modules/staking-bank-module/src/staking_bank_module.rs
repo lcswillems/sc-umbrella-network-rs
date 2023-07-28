@@ -9,8 +9,6 @@ pub mod events;
 
 #[multiversx_sc::module]
 pub trait StakingBankModule: events::StakingBankEventsModule {
-    #[only_owner]
-    #[endpoint]
     fn create(&self, id: ManagedAddress, location: ManagedBuffer) {
         require!(self.validators(&id).is_empty(), "Validator already exists");
 
@@ -24,8 +22,6 @@ pub trait StakingBankModule: events::StakingBankEventsModule {
         });
     }
 
-    #[only_owner]
-    #[endpoint]
     fn remove(&self, id: ManagedAddress) {
         require!(!self.validators(&id).is_empty(), "Validator not exists");
 
@@ -41,14 +37,22 @@ pub trait StakingBankModule: events::StakingBankEventsModule {
         }
     }
 
-    #[only_owner]
-    #[endpoint]
     fn update(&self, id: ManagedAddress, location: ManagedBuffer) {
         require!(!self.validators(&id).is_empty(), "Validator not exists");
 
         self.validators(&id).update(|validator| validator.location = location);
 
         self.validator_updated_event(&id);
+    }
+
+    fn remove_all(&self) {
+        for id in self.addresses().iter() {
+            self.validators(&id).clear();
+
+            self.validator_removed_event(&id);
+        }
+
+        self.addresses().clear();
     }
 
     #[view(getNumberOfValidators)]

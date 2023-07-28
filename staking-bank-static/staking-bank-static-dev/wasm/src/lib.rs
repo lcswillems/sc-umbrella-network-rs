@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            8
+// Endpoints:                            5
 // Async Callback (empty):               1
-// Total number of exported functions:  10
+// Total number of exported functions:   7
 
 #![no_std]
 #![feature(lang_items)]
@@ -16,11 +16,8 @@ multiversx_sc_wasm_adapter::allocator!();
 multiversx_sc_wasm_adapter::panic_handler!();
 
 multiversx_sc_wasm_adapter::endpoints! {
-    staking_bank
+    staking_bank_static_dev
     (
-        create
-        remove
-        update
         getNumberOfValidators
         isValidator
         verifyValidators

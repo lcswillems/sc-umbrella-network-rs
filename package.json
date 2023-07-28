@@ -1,10 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "build": "npm run build:feeds && npm run build:bank:static:local && npm run build:bank",
+    "build": "npm run build:feeds && npm run build:bank:static:local",
+    "build:all": "npm run build:feeds && npm run build:bank:static:local && npm run build:bank:static:dev && npm run build:bank:static:prod",
     "build:feeds": "cd umbrella-feeds && mxpy contract build",
     "build:bank:static:local": "cd staking-bank-static/staking-bank-static-local && mxpy contract build",
-    "build:bank": "cd staking-bank && mxpy contract build",
+    "build:bank:static:dev": "cd staking-bank-static/staking-bank-static-dev && mxpy contract build",
+    "build:bank:static:prod": "cd staking-bank-static/staking-bank-static-prod && mxpy contract build",
     "test": "vitest run",
     "test:contract": "cd umbrella-feeds && cargo test",
     "test:scenarios": "cd umbrella-feeds && mxpy contract test",

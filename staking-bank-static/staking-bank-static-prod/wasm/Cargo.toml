@@ -1,5 +1,5 @@
 [package]
-name = "staking-bank-wasm"
+name = "staking-bank-static-prod-wasm"
 version = "0.0.0"
 authors = [ "you",]
 edition = "2018"
@@ -20,7 +20,7 @@ lto = true
 debug = false
 panic = "abort"
 
-[dependencies.staking-bank]
+[dependencies.staking-bank-static-prod]
 path = ".."
 
 [dependencies.multiversx-sc-wasm-adapter]
