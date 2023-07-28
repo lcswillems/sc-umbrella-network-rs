@@ -3,30 +3,9 @@ import { envChain } from "xsuite/interact";
 import { World } from "xsuite/world";
 // @ts-ignore
 import data from "./data.json";
-import { e } from "xsuite/data"
-import { Address, ResultsParser, SmartContract } from "@multiversx/sdk-core";
-import { ProxyNetworkProvider } from '@multiversx/sdk-network-providers/out';
+import { e, d } from "xsuite/data"
 import BigNumber from 'bignumber.js';
 import { generateSignature } from './signature';
-import {
-  BigUIntType,
-  BigUIntValue,
-  BinaryCodec,
-  BytesValue,
-  ContractFunction,
-  FieldDefinition,
-  Interaction,
-  StringValue,
-  StructType,
-  Transaction,
-  Tuple,
-  U32Type,
-  U32Value,
-  U8Type,
-  U8Value,
-  VariadicValue
-} from '@multiversx/sdk-core/out';
-import { Signature } from '@multiversx/sdk-core/out/signature';
 
 const world = World.new({
   proxyUrl: envChain.publicProxyUrl(),
@@ -132,29 +111,17 @@ program.command("update")
 program.command("getPriceDataByName")
   .argument('[name]', 'Name of price to get', 'ETH-USD')
   .action(async (name: string) => {
-    const proxy = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+    const { returnData } = await world.query({
+      callee: envChain.select(data.address),
+      funcName: "getPriceDataByName",
+      funcArgs: [e.Str(name)],
+    });
 
-    const contract = new SmartContract({ address: Address.fromBech32(envChain.select(data.address)) });
-
-    const query = new Interaction(contract, new ContractFunction('getPriceDataByName'), [new StringValue(name)])
-      .buildQuery();
-    const response = await proxy.queryContract(query);
-    const parsedResponse = new ResultsParser().parseUntypedQueryResponse(response);
-
-    const codec = new BinaryCodec();
-    const structType = new StructType('PriceData', [
-      new FieldDefinition('heartbeat', '', new U32Type()),
-      new FieldDefinition('timestamp', '', new U32Type()),
-      new FieldDefinition('price', '', new BigUIntType()),
-    ]);
-    const [decoded] = codec.decodeNested(parsedResponse.values[0], structType);
-    const decodedAttributes = decoded.valueOf();
-
-    const contractPriceData = {
-      hearbeat: decodedAttributes.hearbeat.toNumber(),
-      timestamp: decodedAttributes.timestamp.toNumber(),
-      price: decodedAttributes.price.toNumber(),
-    }
+    const contractPriceData = d.Tuple({
+      heartbeat: d.U32(),
+      timestamp: d.U32(),
+      price: d.U(),
+    }).topDecode(returnData[0]);
 
     console.log('price data for ETH-USD', contractPriceData);
   });
@@ -162,31 +129,17 @@ program.command("getPriceDataByName")
 program.command("updateSdkCore").action(async () => {
   const wallet = await loadWallet();
 
-  const proxy = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+  const { returnData } = await world.query({
+    callee: envChain.select(data.address),
+    funcName: "getPriceDataByName",
+    funcArgs: [e.Str("ETH-USD")],
+  });
 
-  const account = await proxy.getAccount(Address.fromBech32(wallet.toString()));
-
-  const contract = new SmartContract({ address: Address.fromBech32(envChain.select(data.address)) });
-
-  const query = new Interaction(contract, new ContractFunction('getPriceDataByName'), [new StringValue('ETH-USD')])
-    .buildQuery();
-  const response = await proxy.queryContract(query);
-  const parsedResponse = new ResultsParser().parseUntypedQueryResponse(response);
-
-  const codec = new BinaryCodec();
-  const structType = new StructType('PriceData', [
-    new FieldDefinition('heartbeat', '', new U32Type()),
-    new FieldDefinition('timestamp', '', new U32Type()),
-    new FieldDefinition('price', '', new BigUIntType()),
-  ]);
-  const [decoded] = codec.decodeNested(parsedResponse.values[0], structType);
-  const decodedAttributes = decoded.valueOf();
-
-  const contractPriceData = {
-    hearbeat: decodedAttributes.hearbeat.toNumber(),
-    timestamp: decodedAttributes.timestamp.toNumber(),
-    price: decodedAttributes.price.toNumber(),
-  }
+  const contractPriceData = d.Tuple({
+    heartbeat: d.U32(),
+    timestamp: d.U32(),
+    price: d.U(),
+  }).topDecode(returnData[0]);
 
   console.log('price data for ETH-USD', contractPriceData);
 
@@ -199,41 +152,21 @@ program.command("updateSdkCore").action(async () => {
 
   const { priceKey, publicKey, signature } = generateSignature(envChain.select(data.address), 'ETH-USD', priceData);
 
-  const updateInteraction = new Interaction(contract, new ContractFunction('update'), [
-    new U32Value(1),
-    VariadicValue.fromItems(new BytesValue(Buffer.from(priceKey, 'hex'))),
+  const { tx } = await wallet.callContract({
+    callee: envChain.select(data.address),
+    funcName: "update",
+    funcArgs: [
+      e.U32(1),
+      e.List(e.Bytes(priceKey)),
+      e.U32(1),
+      e.List(e.Tuple(e.U32(priceData.hearbeat), e.U32(priceData.timestamp), e.U(BigInt(priceData.price.toString())))),
+      e.U32(1),
+      e.List(e.Bytes(Buffer.concat([publicKey.valueOf(), signature]))),
+    ],
+    gasLimit: 20_000_000,
+  });
 
-    new U32Value(1),
-    VariadicValue.fromItems(Tuple.fromItems([
-      new U32Value(priceData.hearbeat),
-      new U32Value(priceData.timestamp),
-      new BigUIntValue(priceData.price),
-    ])),
-
-    new U32Value(1),
-    VariadicValue.fromItems(
-      new BytesValue(Buffer.concat([publicKey.valueOf(), signature]))
-    )
-  ]);
-
-  const transaction: Transaction = updateInteraction
-    .withSender(account.address)
-    .withNonce(account.nonce)
-    .withValue(0)
-    .withGasLimit(20_000_000)
-    .withChainID('D')
-    .buildTransaction();
-
-  const toSign = transaction.serializeForSigning();
-  const txSignature = await wallet.sign(toSign);
-
-  transaction.applySignature(Signature.fromBuffer(txSignature));
-
-  console.log('data', transaction.getData().toString('hex'));
-
-  const hash = await proxy.sendTransaction(transaction);
-
-  console.log('transaction hash', hash);
+  console.log('transaction', tx);
 });
 
 program.parse(process.argv);
