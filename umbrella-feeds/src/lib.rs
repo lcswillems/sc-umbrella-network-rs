@@ -32,7 +32,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
         let price_keys_vec = price_keys.into_vec();
         let price_datas_vec = price_datas.into_vec();
 
-        let price_data_hash = self.get_price_data_hash(&price_keys_vec, &price_datas_vec);
+        let price_data_hash = self.hash_data(&price_keys_vec, &price_datas_vec);
 
         self.verify_signatures(&price_data_hash, signatures);
 
@@ -62,7 +62,33 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
         let mut data = MultiValueEncoded::new();
 
         for key in keys.into_iter() {
-            data.push(self.prices(&key).get());
+            let price_data = self.require_and_get_price_data(&key);
+
+            data.push(price_data);
+        }
+
+        data
+    }
+
+    #[view(getManyPriceDataRaw)]
+    fn get_many_price_data_raw(
+        &self,
+        keys: MultiValueEncoded<ManagedBuffer>,
+    ) -> MultiValueEncoded<PriceData<Self::Api>> {
+        let mut data = MultiValueEncoded::new();
+
+        for key in keys.into_iter() {
+            let prices_mapper = self.prices(&key);
+
+            if !prices_mapper.is_empty() {
+                data.push(prices_mapper.get());
+            } else {
+                data.push(PriceData {
+                    heartbeat: 0,
+                    timestamp: 0,
+                    price: BigUint::zero(),
+                })
+            }
         }
 
         data
@@ -70,43 +96,55 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
     #[view(getPriceData)]
     fn get_price_data(&self, key: ManagedBuffer) -> PriceData<Self::Api> {
-        self.prices(&key).get()
+        self.require_and_get_price_data(&key)
     }
 
     #[view(getPrice)]
     fn get_price(&self, key: ManagedBuffer) -> BigUint {
-        self.prices(&key).get().price
+        let price_data = self.require_and_get_price_data(&key);
+
+        price_data.price
     }
 
     #[view(getPriceTimestamp)]
     fn get_price_timestamp(&self, key: ManagedBuffer) -> MultiValue2<BigUint, u32> {
-        let price = self.prices(&key).get();
+        let price_data = self.require_and_get_price_data(&key);
 
-        MultiValue2::from((price.price, price.timestamp))
+        MultiValue2::from((price_data.price, price_data.timestamp))
     }
 
     #[view(getPriceTimestampHeartbeat)]
     fn get_price_timestamp_heartbeat(&self, key: ManagedBuffer) -> MultiValue3<BigUint, u32, u32> {
-        let price: PriceData<Self::Api> = self.prices(&key).get();
+        let price_data = self.require_and_get_price_data(&key);
 
-        MultiValue3::from((price.price, price.timestamp, price.heartbeat))
+        MultiValue3::from((price_data.price, price_data.timestamp, price_data.heartbeat))
     }
 
     #[view(getPriceDataByName)]
     fn get_price_data_by_name(&self, name: ManagedBuffer) -> PriceData<Self::Api> {
         let key = self.crypto().keccak256(name);
 
-        self.prices(&key.as_managed_buffer()).get()
+        let prices_mapper = self.prices(&key.as_managed_buffer());
+
+        if prices_mapper.is_empty() {
+            return PriceData {
+                heartbeat: 0,
+                timestamp: 0,
+                price: BigUint::zero(),
+            }
+        }
+
+        prices_mapper.get()
     }
 
-    fn get_price_data_hash(
+    #[view(hashData)]
+    fn hash_data(
         &self,
         price_keys: &ManagedVec<ManagedBuffer>,
         price_datas: &ManagedVec<PriceData<Self::Api>>,
     ) -> ManagedByteArray<KECCAK256_RESULT_LEN> {
         let mut data = ManagedBuffer::new();
 
-        // data.append(get_chain_id()); // TODO: Can chainId be retrieved from the contract?
         data.append(&self.blockchain().get_sc_address().as_managed_buffer());
 
         for price_key in price_keys.iter() {
@@ -122,7 +160,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
         self.crypto().keccak256(data)
     }
 
-    #[view]
+    #[view(verifySignatures)]
     fn verify_signatures(
         &self,
         hash: &ManagedByteArray<KECCAK256_RESULT_LEN>,
@@ -191,6 +229,14 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
         vec.reverse();
         vec.as_slice().into()
+    }
+
+    fn require_and_get_price_data(&self, key: &ManagedBuffer) -> PriceData<Self::Api> {
+        let prices_mapper = self.prices(key);
+
+        require!(!prices_mapper.is_empty(), "Feed not exist");
+
+        prices_mapper.get()
     }
 
     // map of all prices stored in this contract, key for map is hash of feed name
