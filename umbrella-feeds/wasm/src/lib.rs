@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           12
+// Endpoints:                           14
 // Async Callback (empty):               1
-// Total number of exported functions:  14
+// Total number of exported functions:  16
 
 #![no_std]
 #![feature(lang_items)]
@@ -20,12 +20,14 @@ multiversx_sc_wasm_adapter::endpoints! {
     (
         update
         getManyPriceData
+        getManyPriceDataRaw
         getPriceData
         getPrice
         getPriceTimestamp
         getPriceTimestampHeartbeat
         getPriceDataByName
-        verify_signatures
+        hashData
+        verifySignatures
         prices
         required_signatures
         decimals
