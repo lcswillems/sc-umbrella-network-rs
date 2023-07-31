@@ -1,11 +1,11 @@
 [package]
-name = "staking-bank-module"
+name = "staking-bank-static-module"
 version = "0.0.0"
 authors = [ "you",]
 edition = "2021"
 
 [lib]
-path = "src/staking_bank_module.rs"
+path = "src/staking_bank_static_module.rs"
 
 
 [dependencies.multiversx-sc]

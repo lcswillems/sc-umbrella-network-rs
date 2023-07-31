@@ -8,7 +8,7 @@ pub mod structs;
 pub mod events;
 
 #[multiversx_sc::module]
-pub trait StakingBankModule: events::StakingBankEventsModule {
+pub trait StakingBankStaticModule: events::StakingBankStaticEventsModule {
     fn create(&self, id: ManagedAddress, location: ManagedBuffer) {
         require!(self.validators(&id).is_empty(), "Validator already exists");
 

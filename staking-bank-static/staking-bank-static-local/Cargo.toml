@@ -15,8 +15,8 @@ features = ["esdt-token-payment-legacy-decode"]
 [dependencies.multiversx-sc-modules]
 version = "=0.41.3"
 
-[dependencies.staking-bank-module]
-path = "../../common/modules/staking-bank-module"
+[dependencies.staking-bank-static-module]
+path = "../../common/modules/staking-bank-static-module"
 
 [dev-dependencies.multiversx-sc-scenario]
 version = "0.41.3"

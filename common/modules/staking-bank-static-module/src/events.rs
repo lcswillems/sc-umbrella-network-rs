@@ -1,7 +1,7 @@
 multiversx_sc::imports!();
 
 #[multiversx_sc::module]
-pub trait StakingBankEventsModule {
+pub trait StakingBankStaticEventsModule {
     #[event("validator_registered_event")]
     fn validator_registered_event(&self, #[indexed] id: &ManagedAddress);
 
