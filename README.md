@@ -4,17 +4,19 @@
 
 Need to have `mxpy` installed!
 
-`npm run build` - builds StakingBankStaticLocal and UmbrellaFeeds
+`npm run build` - builds Registry, StakingBankStaticLocal and UmbrellaFeeds
 
+Feeds:
 `npm run build:feeds`
 
+Registry: `npm run build:registry`
+
+Staking Bank:
 `npm run build:bank:static:local`
-
 `npm run build:bank:static:dev`
-
 `npm run build:bank:static:prod`
 
-`npm run build:all` - builds all the contracts from above
+`npm run build:all` - builds ALL the contracts from above
 
 ## Test
 
@@ -44,16 +46,15 @@ To list available commands run:
 
 First, you need to build the appropriate contracts. You can run `npm run build:all` to build all of them. Then they can be deployed.
 
-**The default number of required signatures is 1 and decimals is 8! These can be changed in the `interact/index.ts` file.**
+`npm run interact:devnet deploy [requiredSignatures] [pricesDecimals]` - this will deploy the StakingBankStaticLocal, UmbrellaFeeds and Registry (on devnet).
+The `requiredSignatures` number (default 1) and `pricesDecimals` number (default 8) can optionally be specified
 
-`npm run interact:devnet deploy` - this will deploy the StakingBankStaticLocal and UmbrellaFeeds
+`npm run interact:testnet deploy [requiredSignatures] [pricesDecimals]`
 
-`npm run interact:testnet deploy` - this will deploy the StakingBankStaticDev and UmbrellaFeeds
-
-`npm run interact:mainnet deploy` - this will deploy the StakingBankStaticProd and UmbrellaFeeds
+`npm run interact:mainnet deploy [requiredSignatures] [pricesDecimals]`
 
 **After deploy make sure to add the contract addresses to the appropriate place in the `interact/data.json` file so further interact commands work properly!**
 
 After the `interact/data.json` file is updated, and after you upgrade any code, you can easily upgrade the contracts with:
 
-`npm run interact:devnet upgrade` - this will upgrade both the StakingBankStaticLocal and UmbrellaFeeds contracts 
+`npm run interact:devnet upgrade` - this will upgrade both the StakingBankStaticLocal and UmbrellaFeeds contracts (on devnet).

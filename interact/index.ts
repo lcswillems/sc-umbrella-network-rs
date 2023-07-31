@@ -3,7 +3,7 @@ import { envChain } from "xsuite/interact";
 import { World } from "xsuite/world";
 // @ts-ignore
 import data from "./data.json";
-import { e } from "xsuite/data"
+import { e, d } from "xsuite/data"
 import { Address, ResultsParser, SmartContract } from "@multiversx/sdk-core";
 import { ProxyNetworkProvider } from '@multiversx/sdk-network-providers/out';
 import BigNumber from 'bignumber.js';
@@ -25,6 +25,10 @@ import {
   VariadicValue
 } from '@multiversx/sdk-core/out';
 import { Signature } from '@multiversx/sdk-core/out/signature';
+import createKeccakHash from "keccak";
+
+const UMBRELLA_FEEDS_NAME = "UmbrellaFeeds";
+const STAKING_BANK_NAME = "StakingBank";
 
 const world = World.new({
   proxyUrl: envChain.publicProxyUrl(),
@@ -36,41 +40,67 @@ export const loadWallet = () => world.newWalletFromFile("wallet.json");
 
 const program = new Command();
 
-program.command("deploy").action(async () => {
-  const wallet = await loadWallet();
+program.command("deploy")
+  .argument('[requiredSignatures]', 'The number of required signatures', 1)
+  .argument('[pricesDecimals]', 'The number of decimals', 8)
+  .action(async (requiredSignatures: number, priceDecimals: number) => {
+    const wallet = await loadWallet();
 
-  console.log('Deploying Staking Bank contract...');
+    console.log('Deploying Staking Bank contract...');
+    const resultStakingBank = await wallet.deployContract({
+      code: envChain.select(data.stakingBankCode),
+      codeMetadata: ["upgradeable"],
+      gasLimit: 100_000_000,
+    });
+    console.log('Staking Bank Result', resultStakingBank);
 
-  const resultStakingBank = await wallet.deployContract({
-    code: envChain.select(data.stakingBankCode),
-    codeMetadata: ["upgradeable"],
-    gasLimit: 100_000_000,
+    console.log(`Deploying Umbrella Feeds contract with ${ requiredSignatures } required signatures and ${ priceDecimals } price decimals ...`);
+    const result = await wallet.deployContract({
+      code: data.code,
+      codeMetadata: ["upgradeable"],
+      gasLimit: 100_000_000,
+      codeArgs: [
+        e.Addr(resultStakingBank.address),
+        e.U32(BigInt(requiredSignatures)),
+        e.U8(BigInt(priceDecimals))
+      ]
+    });
+    console.log("Umbrella Feeds Result:", result);
+
+    console.log('Deploying Registry contract...');
+    const resultRegistry = await wallet.deployContract({
+      code: data.registryCode,
+      codeMetadata: ["upgradeable"],
+      gasLimit: 100_000_000,
+    });
+    console.log('Registry Result', resultRegistry);
+
+    console.log('Adding UmbrellaFeeds & StakingBank addresses to Registry...');
+    const txResult = await wallet.callContract({
+      callee: resultRegistry.address,
+      gasLimit: 10_000_000,
+      funcName: "importAddresses",
+      funcArgs: [
+        e.U32(2),
+        e.Bytes(Buffer.from(STAKING_BANK_NAME, 'utf-8')),
+        e.Bytes(Buffer.from(UMBRELLA_FEEDS_NAME, 'utf-8')),
+
+        e.U32(2),
+        e.Addr(resultStakingBank.address),
+        e.Addr(result.address),
+      ]
+    });
+    console.log('Adding addresses to Registry Result', txResult);
+
+    console.log('Staking Bank Address:', resultStakingBank.address);
+    console.log('Umbrella Feeds Address:', result.address);
+    console.log('Registry Address', resultRegistry.address);
   });
-  console.log('Staking Bank Result', resultStakingBank);
-
-  console.log('Deploying Umbrella Feeds contract...');
-
-  const result = await wallet.deployContract({
-    code: data.code,
-    codeMetadata: ["upgradeable"],
-    gasLimit: 100_000_000,
-    codeArgs: [
-      e.Addr(resultStakingBank.address),
-      e.U32(1), // required signatures
-      e.U8(8) // prices decimals
-    ]
-  });
-  console.log("Umbrella Feeds Result:", result);
-
-  console.log('Staking Bank Address:', resultStakingBank.address);
-  console.log('Umbrella Feeds Address:', result.address);
-});
 
 program.command("upgrade").action(async () => {
   const wallet = await loadWallet();
 
   console.log('Upgrading Staking Bank contract...');
-
   const resultStakingBank = await wallet.upgradeContract({
     callee: envChain.select(data.stakingBankAddress),
     code: envChain.select(data.stakingBankCode),
@@ -80,7 +110,6 @@ program.command("upgrade").action(async () => {
   console.log('Staking Bank Result', resultStakingBank);
 
   console.log('Upgrading Umbrella Feeds contract...');
-
   const result = await wallet.upgradeContract({
     callee: envChain.select(data.address),
     code: data.code,
@@ -94,8 +123,7 @@ program.command("upgrade").action(async () => {
   });
   console.log("Umbrella Feeds Result:", result);
 
-  console.log('Staking Bank Address:', resultStakingBank.address);
-  console.log('Umbrella Feeds Address:', result.address);
+  console.log('Contract successfully upgraded!');
 });
 
 program.command("ClaimDeveloperRewards").action(async () => {
@@ -129,20 +157,20 @@ program.command("update")
       funcName: 'update',
       funcArgs: [
         e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
-        e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
+        e.Bytes(Buffer.from(priceKey, 'hex')),
 
         e.U32(1),
-        e.List(e.Tuple(
+        e.Tuple(
           e.U32(BigInt(priceData.hearbeat)),
           e.U32(BigInt(priceData.timestamp)),
           e.U(BigInt(priceData.price.toNumber())),
-        )),
+        ),
 
         e.U32(1),
-        e.List(e.Tuple(
+        e.Tuple(
           e.Addr(publicKey.toAddress().bech32()),
           e.Bytes(signature),
-        )),
+        ),
       ],
     });
 
@@ -172,13 +200,51 @@ program.command("getPriceDataByName")
     const decodedAttributes = decoded.valueOf();
 
     const contractPriceData = {
-      hearbeat: decodedAttributes.hearbeat.toNumber(),
+      heartbeat: (decodedAttributes.heartbeat as BigNumber).toNumber(),
       timestamp: decodedAttributes.timestamp.toNumber(),
       price: decodedAttributes.price.toNumber(),
     }
 
     console.log('price data for ETH-USD', contractPriceData);
   });
+
+
+program.command("getPriceData")
+  .argument('[name]', 'Name of price to get', 'ETH-USD')
+  .action(async (name: string) => {
+    const priceKey = createKeccakHash('keccak256').update(name).digest('hex');
+
+    const { returnData } = await world.query({
+      callee: envChain.select(data.address),
+      funcName: "getPriceData",
+      funcArgs: [e.Bytes(Buffer.from(priceKey, 'hex'))],
+    });
+
+    const contractPriceData = d.Tuple({
+      heartbeat: d.U32(),
+      timestamp: d.U32(),
+      price: d.U(),
+    }).topDecode(returnData[0]);
+
+    console.log('price data for ETH-USD', contractPriceData);
+  });
+
+
+program.command("getRegistryAddressByName")
+  .argument('name', 'Name of the address to get')
+  .action(async (name: string) => {
+    const proxy = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+
+    const contract = new SmartContract({ address: Address.fromBech32(envChain.select(data.registryAddress)) });
+
+    const query = new Interaction(contract, new ContractFunction('getAddressByString'), [new StringValue(name)])
+      .buildQuery();
+    const response = await proxy.queryContract(query);
+    const parsedResponse = new ResultsParser().parseUntypedQueryResponse(response);
+
+    console.log(`Registry address for ${ name }`, Address.fromBuffer(parsedResponse.values[0]).bech32());
+  });
+
 
 program.command("updateSdkCore").action(async () => {
   const wallet = await loadWallet();
