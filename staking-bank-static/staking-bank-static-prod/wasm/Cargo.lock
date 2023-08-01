@@ -190,7 +190,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 
 [[package]]
-name = "staking-bank-static-local"
+name = "staking-bank-static-module"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc",
+]
+
+[[package]]
+name = "staking-bank-static-prod"
 version = "0.0.0"
 dependencies = [
  "multiversx-sc",
@@ -199,18 +206,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "staking-bank-static-local-wasm"
+name = "staking-bank-static-prod-wasm"
 version = "0.0.0"
 dependencies = [
  "multiversx-sc-wasm-adapter",
- "staking-bank-static-local",
-]
-
-[[package]]
-name = "staking-bank-static-module"
-version = "0.0.0"
-dependencies = [
- "multiversx-sc",
+ "staking-bank-static-prod",
 ]
 
 [[package]]

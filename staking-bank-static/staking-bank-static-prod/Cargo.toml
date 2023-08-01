@@ -1,5 +1,5 @@
 [package]
-name = "staking-bank-static-local"
+name = "staking-bank-static-prod"
 version = "0.0.0"
 authors = [ "you",]
 edition = "2018"
