@@ -201,8 +201,6 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
         let hash = self.crypto().keccak256(data);
 
-        sc_print!("hash {}", hash.as_managed_buffer());
-
         require!(
             self.crypto().verify_ed25519(
                 &raw_signature.address.as_managed_buffer(),
