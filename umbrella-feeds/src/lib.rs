@@ -173,7 +173,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
             "Not enough signatures"
         );
 
-        let mut validators = MultiValueEncoded::<Self::Api, ManagedAddress>::new();
+        let mut validators = ManagedVec::<Self::Api, ManagedAddress>::new();
 
         let signatures_vec = signatures.into_vec();
 
@@ -182,10 +182,12 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
 
             self.verify_signature(&hash, &raw_signature);
 
+            require!(validators.find(&raw_signature.address).is_none(), "Signatures out of order");
+
             validators.push(raw_signature.address);
         }
 
-        require!(self.verify_validators(validators), "Invalid signer");
+        require!(self.verify_validators(MultiValueEncoded::from(validators)), "Invalid signer");
     }
 
     fn verify_signature(
@@ -207,7 +209,7 @@ pub trait UmbrellaFeeds: proxy::ProxyModule {
                 &hash.as_managed_buffer(),
                 &raw_signature.signature.as_managed_buffer(),
             ),
-            "Signatures out of order"
+            "Invalid signature"
         );
     }
 
