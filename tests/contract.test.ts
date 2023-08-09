@@ -61,7 +61,11 @@ const deployContract = async (addressStakingBank: string, requiredSignatures: nu
   });
 }
 
-const generateSignature = (priceKeyRaw: string, priceData: { price: BigNumber; hearbeat: number; timestamp: number }, signerPem = './alice.pem') => {
+const generateSignature = (priceKeyRaw: string, priceData: {
+  price: BigNumber;
+  hearbeat: number;
+  timestamp: number
+}, signerPem = './alice.pem') => {
   const priceKey = createKeccakHash('keccak256').update(priceKeyRaw).digest('hex');
   const contractAddress = Address.fromBech32(address).pubkey();
 
@@ -118,20 +122,20 @@ test("Deploy and update valid signature", async () => {
     funcName: 'update',
     funcArgs: [
       e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
-      e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
+      e.Bytes(Buffer.from(priceKey, 'hex')),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.U32(priceData.hearbeat),
         e.U32(priceData.timestamp),
         e.U(priceData.price.toNumber()),
-      )),
+      ),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.Addr(publicKey.toAddress().bech32()),
         e.Bytes(signature),
-      )),
+      ),
     ],
   });
 
@@ -188,25 +192,25 @@ test("Update not enough signatures", async () => {
     funcName: 'update',
     funcArgs: [
       e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
-      e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
+      e.Bytes(Buffer.from(priceKey, 'hex')),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.U32(priceData.hearbeat),
         e.U32(priceData.timestamp),
         e.U(priceData.price.toNumber()),
-      )),
+      ),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.Addr(publicKey.toAddress().bech32()),
         e.Bytes(signature),
-      )),
+      ),
     ],
   }).assertFail({ code: 4, message: 'Not enough signatures' });
 });
 
-test("Update signatures out of order", async () => {
+test("Update invalid signature", async () => {
   await deployStakingBank();
 
   await deployContract(addressStakingBank);
@@ -225,20 +229,20 @@ test("Update signatures out of order", async () => {
     funcName: 'update',
     funcArgs: [
       e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
-      e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
+      e.Bytes(Buffer.from(priceKey, 'hex')),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.U32(priceData.hearbeat),
         e.U32(priceData.timestamp),
         e.U(1), // wrong price
-      )),
+      ),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.Addr(publicKey.toAddress().bech32()),
         e.Bytes(signature),
-      )),
+      ),
     ],
   }).assertFail({ code: 10, message: 'invalid signature' });
 });
@@ -262,20 +266,115 @@ test("Update invalid signer", async () => {
     funcName: 'update',
     funcArgs: [
       e.U32(1), // Length of the list needed before because of use of MultiValueManagedVecCounted in contract
-      e.List(e.Bytes(Buffer.from(priceKey, 'hex'))),
+      e.Bytes(Buffer.from(priceKey, 'hex')),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.U32(priceData.hearbeat),
         e.U32(priceData.timestamp),
         e.U(priceData.price.toNumber()),
-      )),
+      ),
 
       e.U32(1),
-      e.List(e.Tuple(
+      e.Tuple(
         e.Addr(publicKey.toAddress().bech32()),
         e.Bytes(signature),
-      )),
+      ),
     ],
   }).assertFail({ code: 4, message: 'Invalid signer' });
+});
+
+test("Update signatures out of order", async () => {
+  await deployStakingBank();
+
+  await deployContract(addressStakingBank, 15);
+
+  const priceData = {
+    hearbeat: 0,
+    timestamp: 1688998114,
+    price: new BigNumber(1000000000, 10),
+  };
+
+  const { priceKey, publicKey, signature } = generateSignature('ETH-USD', priceData);
+  const { publicKey: publicKeyBob, signature: signatureBob } = generateSignature('ETH-USD', priceData, './bob.pem');
+  const { publicKey: publicKeyCarol, signature: signatureCarol } = generateSignature('ETH-USD', priceData, './carol.pem');
+
+  await deployer.callContract({
+    callee: contract,
+    gasLimit: 53_000_000,
+    funcName: 'update',
+    funcArgs: [
+      e.U32(1),
+      e.Bytes(Buffer.from(priceKey, 'hex')),
+
+      e.U32(1),
+      e.Tuple(
+        e.U32(priceData.hearbeat),
+        e.U32(priceData.timestamp),
+        e.U(priceData.price.toNumber()),
+      ),
+
+      e.U32(15),
+      e.Tuple(
+        e.Addr(publicKey.toAddress().bech32()),
+        e.Bytes(signature),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyBob.toAddress().bech32()),
+        e.Bytes(signatureBob),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyCarol.toAddress().bech32()),
+        e.Bytes(signatureCarol),
+      ),
+      e.Tuple(
+        e.Addr(publicKey.toAddress().bech32()),
+        e.Bytes(signature),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyBob.toAddress().bech32()),
+        e.Bytes(signatureBob),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyCarol.toAddress().bech32()),
+        e.Bytes(signatureCarol),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyBob.toAddress().bech32()),
+        e.Bytes(signatureBob),
+      ),
+      e.Tuple(
+        e.Addr(publicKey.toAddress().bech32()),
+        e.Bytes(signature),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyCarol.toAddress().bech32()),
+        e.Bytes(signatureCarol),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyBob.toAddress().bech32()),
+        e.Bytes(signatureBob),
+      ),
+      e.Tuple(
+        e.Addr(publicKey.toAddress().bech32()),
+        e.Bytes(signature),
+      ),
+      e.Tuple(
+        e.Addr(publicKey.toAddress().bech32()),
+        e.Bytes(signature),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyCarol.toAddress().bech32()),
+        e.Bytes(signatureCarol),
+      ),
+      e.Tuple(
+        e.Addr(publicKey.toAddress().bech32()),
+        e.Bytes(signature),
+      ),
+      e.Tuple(
+        e.Addr(publicKeyCarol.toAddress().bech32()),
+        e.Bytes(signatureCarol),
+      ),
+    ],
+  }).assertFail({ code: 4, message: 'Signatures out of order' });
 });

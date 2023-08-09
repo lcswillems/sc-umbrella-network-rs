@@ -270,9 +270,9 @@ program.command("updateSdkCore").action(async () => {
   const decodedAttributes = decoded.valueOf();
 
   const contractPriceData = {
-    hearbeat: decodedAttributes.hearbeat.toNumber(),
-    timestamp: decodedAttributes.timestamp.toNumber(),
-    price: decodedAttributes.price.toNumber(),
+    hearbeat: decodedAttributes?.hearbeat?.toNumber(),
+    timestamp: decodedAttributes?.timestamp?.toNumber(),
+    price: decodedAttributes?.price?.toNumber(),
   }
 
   console.log('price data for ETH-USD', contractPriceData);
@@ -288,19 +288,17 @@ program.command("updateSdkCore").action(async () => {
 
   const updateInteraction = new Interaction(contract, new ContractFunction('update'), [
     new U32Value(1),
-    VariadicValue.fromItems(new BytesValue(Buffer.from(priceKey, 'hex'))),
+    new BytesValue(Buffer.from(priceKey, 'hex')),
 
     new U32Value(1),
-    VariadicValue.fromItems(Tuple.fromItems([
+    Tuple.fromItems([
       new U32Value(priceData.hearbeat),
       new U32Value(priceData.timestamp),
       new BigUIntValue(priceData.price),
-    ])),
+    ]),
 
     new U32Value(1),
-    VariadicValue.fromItems(
-      new BytesValue(Buffer.concat([publicKey.valueOf(), signature]))
-    )
+    new BytesValue(Buffer.concat([publicKey.valueOf(), signature]))
   ]);
 
   const transaction: Transaction = updateInteraction
